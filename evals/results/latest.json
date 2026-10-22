@@ -1,0 +1,129 @@
+{
+ "time": "2026-10-22T20:47:47",
+ "checks": {
+  "unit-tests": {
+   "pass": true,
+   "metric": "Ran 38 tests in 1.217s",
+   "detail": "",
+   "s": 1.31
+  },
+  "parse-all-logs": {
+   "pass": true,
+   "metric": {
+    "files": 46,
+    "sessions": 59,
+    "subagents": 32,
+    "bad_lines": 0,
+    "cold_s": 1.57
+   },
+   "detail": "",
+   "s": 1.57
+  },
+  "pricing-reproduces-claude-meter": {
+   "pass": true,
+   "metric": {
+    "model_rows": 56,
+    "max_rel_error": 0.00038,
+    "median_rel_error": 0.0
+   },
+   "detail": "",
+   "s": 1.74
+  },
+  "logged-cost-never-exceeds-meter": {
+   "pass": true,
+   "metric": {
+    "sessions": 29,
+    "median_coverage": 0.9707,
+    "min_coverage": 0.6973
+   },
+   "detail": "",
+   "s": 0.0
+  },
+  "codex-tokens-match-thread-db": {
+   "pass": true,
+   "metric": {
+    "threads": 9,
+    "mismatched": 0
+   },
+   "detail": "",
+   "s": 0.0
+  },
+  "unavailable-never-zero": {
+   "pass": true,
+   "metric": {
+    "violations": 0
+   },
+   "detail": "",
+   "s": 0.98
+  },
+  "context-inspector": {
+   "pass": true,
+   "metric": {
+    "exact": 43,
+    "exact_complete_rate": 1.0,
+    "transcript": 185,
+    "calibration_range": [
+     1.338,
+     1.89
+    ],
+    "max_sum_error": 0.0002,
+    "slowest_s": 0.005
+   },
+   "detail": "",
+   "s": 2.79
+  },
+  "recommendations-grounded": {
+   "pass": true,
+   "metric": {
+    "recommendations": 8,
+    "ids": [
+     "cache-idle-rebuild",
+     "cache-prefix-change",
+     "harness-listings",
+     "large-tool-outputs",
+     "hook-injection",
+     "long-context",
+     "subagent-model",
+     "unlogged-spend"
+    ],
+    "estimated_savings_usd": 45.86
+   },
+   "detail": "",
+   "s": 0.0
+  },
+  "http-e2e-every-session": {
+   "pass": true,
+   "metric": {
+    "requests": 190,
+    "p95_s": 0.102,
+    "max_s": 0.199
+   },
+   "detail": "",
+   "s": 6.38
+  },
+  "ui-is-local-only": {
+   "pass": true,
+   "metric": {
+    "external_refs": 0,
+    "js_syntax": true
+   },
+   "detail": "",
+   "s": 0.08
+  },
+  "skill-portable": {
+   "pass": true,
+   "metric": {
+    "py310_syntax_errors": 0,
+    "isolated_doctor": true,
+    "isolated_report": true,
+    "skill_md_lines": 92
+   },
+   "detail": "",
+   "s": 2.98
+  }
+ },
+ "summary": {
+  "passed": 11,
+  "failed": 0
+ }
+}

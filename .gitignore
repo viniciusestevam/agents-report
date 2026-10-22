@@ -1,0 +1,4 @@
+# Build output of `agents_report.py package`: never commit
+*.zip
+__pycache__/
+.DS_Store
