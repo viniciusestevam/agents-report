@@ -295,8 +295,8 @@ def cmd_stop(st, a):
         print("No dashboard is running (cleared stale state).")
 
 
-# Left out of the zip: caches, OS junk, the eval run history (dev noise), and zips.
-PACKAGE_EXCLUDE = ("__pycache__", "*.pyc", ".DS_Store", "history.jsonl", "*.zip")
+# Left out of the zip: caches, OS junk, git metadata, the eval run history (dev noise), and zips.
+PACKAGE_EXCLUDE = ("__pycache__", "*.pyc", ".DS_Store", "history.jsonl", "*.zip", ".git", ".gitignore")
 
 
 def cmd_package(st, a):
