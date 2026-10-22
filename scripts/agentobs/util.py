@@ -1,5 +1,7 @@
 """Small shared helpers: reading (possibly zstd-compressed) JSONL, timestamps, text sizing."""
 import json
+import os
+import time
 import shutil
 import subprocess
 from datetime import datetime
@@ -8,6 +10,18 @@ try:
     from compression import zstd as _zstd  # Python 3.14+
 except ImportError:
     _zstd = None
+
+def now():
+    """The clock behind every relative window (--days, report date). AGENTS_REPORT_NOW (epoch seconds or ISO
+    date/time) pins it, so the same logs always give the same output."""
+    v = os.environ.get("AGENTS_REPORT_NOW")
+    if not v:
+        return time.time()
+    try:
+        return float(v)
+    except ValueError:
+        return datetime.fromisoformat(v).timestamp()
+
 
 USAGE_KEYS = ("input", "output", "cache_read", "cache_write_5m", "cache_write_1h", "reasoning")
 

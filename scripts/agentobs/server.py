@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import analyze, context, pricing
+from . import analyze, context, pricing, util
 from .store import Store, tree_cost
 
 UI = Path(__file__).resolve().parent.parent.parent / "assets" / "ui"
@@ -128,7 +128,7 @@ class Handler(BaseHTTPRequestHandler):
     def _sums(self, q):
         sums = self.store.summaries()
         if q.get("days"):
-            cutoff = time.time() - float(q["days"]) * 86400
+            cutoff = util.now() - float(q["days"]) * 86400
             keep = {s["key"] for s in sums if not s["parent_key"] and (s["started"] or 0) >= cutoff}
             sums = [s for s in sums if s["key"] in keep or s["parent_key"] in keep]
         return sums

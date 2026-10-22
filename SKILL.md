@@ -10,70 +10,47 @@ metadata:
 # Agents Report
 
 Deterministic analysis of the agent transcripts already on this machine, with a local visual
-dashboard. The script does the counting; your job is to open the right view, read the output, and
-explain it.
+dashboard. The scripts gather the data, rank the findings and write the answer; your job is to pick
+the command for the question and relay what it prints.
 
 All commands: `python3 scripts/agents_report.py <command>` (run from this skill's directory, or use the
 script's absolute path). Every command accepts `--json`. Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`,
 `--project NAME`, `--here` (sessions started in the current directory). A session can be named by
 its id prefix (`693b1d8d`) or `latest`.
 
-## Show it visually first
+## One command per question
 
-The dashboard is the main way to read the results. **Every workflow starts by opening it** on the
-view that answers the question:
+Each question has one command that gathers the data, opens the matching dashboard view, and prints a
+finished answer with the dashboard URL in it. Run it and pass its output on. Don't stitch several
+commands together or redo its arithmetic.
 
-```bash
-python3 scripts/agents_report.py dashboard                                # overview
-python3 scripts/agents_report.py dashboard --view recommendations
-python3 scripts/agents_report.py dashboard --session latest               # one session: timeline, context, cost
-python3 scripts/agents_report.py dashboard --session <id> --req N         # context inspector at request N
-```
+| The user asks | Run | Then |
+| --- | --- | --- |
+| Nothing specific, "show me my usage", "what does it cost", "how do I spend less" | `brief --days 30` (or the period they name; omit `--days` for all time) | Relay the output as is. Offer the fix for a recommendation from [references/recommendations.md](references/recommendations.md) if they want it. |
+| "Why was this session expensive / slow?" | `explain <session>` (`latest` = most recent here; find others with `sessions --here`) | Relay the output: findings are already ranked by cost and cite request numbers. |
+| "What is in my context?" | `context latest`, and `dashboard --session latest --req <N>` with N from its first line | Name the three largest groups exactly as printed. |
+| A specific session's numbers | `show <session>` | Quote the lines asked about. |
+| A full written report | `report --days 30 --out report.md` | Give the path. |
+| "Open the dashboard" | `dashboard` (`--view sessions\|recommendations\|sources`, `--session <id>`, `--req N`) | Give the URL it prints. |
 
-`dashboard` reuses the running dashboard server or starts one in the background (port 48765, or
-any free port if that one is taken), opens the browser, and prints the URL. Always give the user that
-URL. It returns immediately; don't wrap it in `&`. Use `--no-open` only when there is no browser (SSH, CI).
+The output is deterministic: the same logs give the same text. `--now 2026-10-01` (or `AGENTS_REPORT_NOW`)
+pins the clock for a report "as of" a date. Every command accepts `--json`; the answer commands put the
+finished text under `"text"`. Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`,
+`--project NAME`, `--here`. A session can be named by its id prefix (`693b1d8d`) or `latest`.
 
-The server stops itself about 20 s after the user closes the last dashboard tab (10 min if no tab is
-ever opened), so you don't need to clean up. Run `stop` only when the user asks to stop it now. To show
-the dashboard again later, run `dashboard` again; it starts a new server if the old one has stopped.
+All commands: `python3 scripts/agents_report.py <command>` (run from this skill's directory, or use the
+script's absolute path). `brief`, `explain` and `dashboard` start or reuse the local dashboard server and
+open the browser; add `--no-open` when there is no browser (SSH, CI). They return immediately; don't wrap
+them in `&`. The server stops itself about 20 s after the last dashboard tab closes; run `stop` only
+when the user asks to stop it now.
 
-| Command | Answers |
-| --- | --- |
-| `dashboard [--view …] [--session …] [--req N]` | Opens the visual view (starts the server if needed) |
-| `report [--days 30] [--out report.md]` | Overall spend, cache efficiency, ranked recommendations with evidence |
-| `sessions [--limit 30]` | Which sessions exist, their cost and context size |
-| `show <session>` | One session: models, tokens, cost (estimated vs measured), cache rebuilds, large outputs |
-| `context <session> [--req N] [--top 15]` | What one API request put in the context window, by contributor |
-| `recommend` | Just the recommendations |
-| `doctor` | Which agents were found, parse errors, zstd support |
-| `package [--out file.zip]` | Zip this skill to install it in another agent |
-| `stop` | Stop the dashboard now (it also stops itself once its last tab closes) |
-
-## Workflows
-
-**Invoked with no question, or "show me my usage"**: `dashboard`, then `report --days 30`. Reply with
-the URL, the total, and the top three recommendations in a few lines; the page holds the detail.
-
-**"What does my agent usage cost / how can I spend less?"**
-1. `dashboard --view recommendations`, then `report --days 30` (or the period the user names).
-2. Lead with the URL and the total, then the top two or three recommendations with evidence and savings.
-3. Offer the specific change for each (see [references/recommendations.md](references/recommendations.md)).
-
-**"Why was this session expensive / slow?"**
-1. `sessions --here` or `sessions` to find it; `show <id>`.
-2. `dashboard --session <id>`. If the context is large, `dashboard --session <id> --req N` on the
-   request before the cost jumped (N from `show`), and `context <id> --req N` for the numbers.
-3. Explain the cause in one sentence per finding, citing request numbers and token counts.
-
-**"What is in my context?"** `dashboard --session latest --req <last>` and `context latest --here`.
-Name the three largest contributors and what each one is (loaded skills, hook output, skills listing,
-tool results, tool definitions, MCP tools).
+Other commands: `sessions [--limit 30]` (list), `recommend` (all recommendations), `doctor` (which agents
+were found, parse errors), `package [--out file.zip]` (zip this skill for another agent).
 
 ## Rules
 
-- **Quote numbers from the output; never compute or invent your own.** If a figure is not in the
-  output, say it is unavailable.
+- **Relay, don't recompute.** Quote numbers and findings from the output; never compute, round or
+  invent your own. If a figure is not in the output, say it is unavailable.
 - **Keep the basis.** Say "measured" for values read from logs (tokens, Claude Code's cost meter,
   timestamps) and "estimated" for computed ones (cost from list prices, context shares, savings).
   A dash or `null` means unavailable, not zero. Codex costs are unavailable unless the user adds a

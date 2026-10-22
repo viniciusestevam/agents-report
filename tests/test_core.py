@@ -315,6 +315,42 @@ class TestCLI(Base):
         self.assertEqual(self.run_cli("show", "zzzz").returncode, 2)
 
 
+class TestDeterminism(Base):
+    """Same logs + pinned clock = byte-identical output, whatever the process (hash seed) or day it runs."""
+    COMMANDS = (["sessions"], ["show", fixtures.SID[:8]], ["context", fixtures.SID[:8], "--req", "1"], ["report"], ["recommend"],
+                ["brief", "--no-dashboard"], ["explain", fixtures.SID[:8], "--no-dashboard"], ["report", "--days", "30"], ["doctor"])
+
+    def run_cli(self, args, seed, now="2026-10-15T12:00:00"):
+        env = dict(os.environ, CLAUDE_CONFIG_DIR=str(self.claude_root.parent), CODEX_HOME=str(self.codex_home), HERMES_HOME="/nonexistent",
+                   PI_CODING_AGENT_DIR="/nonexistent", XDG_DATA_HOME="/nonexistent", OPENCODE_DB="", PYTHONHASHSEED=str(seed), TZ="UTC",
+                   AGENTS_REPORT_NOW=now)
+        r = subprocess.run([sys.executable, str(SCRIPTS / "agents_report.py"), *args], capture_output=True, text=True, env=env, timeout=60)
+        self.assertEqual(r.returncode, 0, (args, r.stderr))
+        return r.stdout
+
+    def test_identical_across_runs(self):
+        for args in self.COMMANDS:
+            for fmt in ([], ["--json"]):
+                with self.subTest(args=args + fmt):
+                    self.assertEqual(self.run_cli(args + fmt, 1), self.run_cli(args + fmt, 2))
+
+    def test_clock_is_pinned(self):
+        self.assertIn("as of 2026-10-15 12:00", self.run_cli(["brief", "--no-dashboard"], 1))
+        self.assertIn("Generated 2026-10-15 12:00", self.run_cli(["report"], 1))
+        # the fixtures are from 2026-10-01: a pinned clock decides what --days keeps, not the day the test runs
+        inside = json.loads(self.run_cli(["report", "--json", "--days", "60"], 1))["overview"]["sessions"]
+        outside = json.loads(self.run_cli(["report", "--json", "--days", "60"], 1, now="2027-06-01"))["overview"]["sessions"]
+        before = json.loads(self.run_cli(["report", "--json"], 1, now="2020-01-01"))["overview"]["sessions"]
+        self.assertEqual((inside, outside, before), (2, 0, 0))
+
+    def test_explain_ranks_findings_by_cost(self):
+        d = json.loads(self.run_cli(["explain", fixtures.SID[:8], "--no-dashboard", "--json"], 1))
+        usd = [f["usd"] for f in d["findings"] if f["usd"] is not None]
+        self.assertEqual(usd, sorted(usd, reverse=True))
+        self.assertIsNotNone(d["costliest_request"])
+        self.assertTrue(d["text"].startswith(d["header"][0]))
+
+
 class TestSkill(unittest.TestCase):
     def test_frontmatter_follows_agentskills_spec(self):
         import re

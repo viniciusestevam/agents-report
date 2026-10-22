@@ -18,6 +18,7 @@ passed last run and fails now prints `REGRESSION`.
 | recommendations-grounded | Every rule has why/action/basis; every evidence key resolves to a real session | 0 problems |
 | http-e2e-every-session | Every session's detail and context endpoints return 200 with consistent request counts; foreign Host rejected | 0 failures |
 | ui-is-local-only | No external URLs in the UI; JS parses | 0 refs |
+| deterministic-on-real-logs | A frozen copy of this machine's logs, clock pinned, gives byte-identical `report`/`brief`/`sessions`/`recommend`/`explain`/`show` output across processes with different hash seeds | 0 differing |
 | skill-portable | The skill folder copied alone runs under `python3 -I`; code parses as Python 3.10 | all true |
 
 ## History (this machine, 2026-10-22)
@@ -27,6 +28,7 @@ passed last run and fails now prints `REGRESSION`.
 | Baseline | 9/11 | — |
 | 2 | 10/11 | `pricing` max error 29.8% → 0.04%: the eval assumed the main thread's cache TTL for subagents (they use 5 min). Pricing code was correct. |
 | 3 | 11/11 | `context` complete rate 78.8% → 100%: unstored messages (previous response, tool results, typed prompts) rebuilt from the transcript. |
+| 4 | 12/12 | Added `deterministic-on-real-logs` with the one-command answers (`brief`, `explain`) and the pinnable clock. |
 | 4 | 11/11 | Harness system messages split into contributors. One block had been labelled "Hooks" though 25k of its 30k chars were the skills/agents/MCP listings. Added `harness-listings` rule. |
 
 Latest measured values: 53 model rows reproduce the meter with max error 0.038%; 9/9 Codex threads match

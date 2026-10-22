@@ -6,8 +6,9 @@ context, and what to change. It runs as a web UI and as a portable Agent Skill, 
 standard library. Nothing leaves your machine.
 
 ```bash
-python3 scripts/agents_report.py dashboard        # opens the web UI (http://127.0.0.1:48765)
-python3 scripts/agents_report.py report --days 30 # Markdown report with recommendations
+python3 scripts/agents_report.py dashboard          # opens the web UI (http://127.0.0.1:48765)
+python3 scripts/agents_report.py brief --days 30    # spend, cache hit and top 3 recommendations, ready to read
+python3 scripts/agents_report.py explain latest     # why your latest session cost what it did
 ```
 
 Paths below are relative to this folder.
@@ -16,9 +17,13 @@ Paths below are relative to this folder.
 
 - **Overview**: spend per day, cache hit rate, tokens, top sessions, spend by project, tool usage, and the
   recommendations with the most estimated savings.
-- **Sessions**: an interactive timeline (lanes per project, zoom, pan, keyboard, click to open) and a searchable
-  list of every session across agents, with subagent cost rolled into the parent.
+- **Sessions**: an interactive timeline (a lane per project with its session count and cost, sortable by
+  recent or cost, a spend-per-day strip to pan and zoom with, keyboard, click to open) and a searchable
+  list of every session across agents, flat or grouped by project, with subagent cost rolled into the parent.
 - **Session detail**:
+  - *Trace* (opens first): the session as a span tree (prompts → model calls, tool calls, subagents) on one
+    clock, with duration and cost per span, slowest/priciest/error badges, zoom, a details panel, and live
+    refresh while the session is still running.
   - *Context per request*: one column per API call, split into cache read, cache write and uncached
     input, with compactions and cache rebuilds visible at a glance.
   - *Timeline*: prompts, replies, thinking, tool calls with full input/output, hooks, injected
@@ -69,12 +74,18 @@ and restarted only when the skill's code changes.
 | --- | --- |
 | `dashboard [--view V] [--session ID] [--req N]` | Opens the web UI; starts or reuses a background server on 127.0.0.1:48765 (any free port if taken). The server stops itself ~20 s after the last dashboard tab closes |
 | `stop` / `serve` | Stop the background server now / run it in the foreground until Ctrl+C |
+| `brief [--days N]` | Ready-to-read answer: spend, measured meter, cache hit, costliest session, top 3 recommendations, dashboard URL |
+| `explain <id-prefix\|latest>` | Ready-to-read answer to "why was this session expensive?": findings ranked by cost, context at the costliest request |
 | `report [--days N] [--out file.md] [--json]` | Summary + recommendations |
 | `sessions [--here] [--agent A] [--project P]` | List sessions |
 | `show <id-prefix\|latest>` | One session: cost, tokens, context, signals |
 | `context <id> [--req N]` | Context breakdown for one request |
 | `recommend`, `doctor` | Recommendations only; data-source check |
 | `package [--out file.zip]` | Zip this folder for import into another agent |
+
+Output is deterministic: the same logs give byte-identical text (a test and an eval check this across
+processes). `--now DATE` (or `AGENTS_REPORT_NOW`) pins the clock, so `--days` windows and report dates are
+reproducible and later sessions are left out.
 
 ## Pricing
 
@@ -104,7 +115,7 @@ agents-report/
 
 ```bash
 python3 -m unittest discover -s tests  # unit + integration tests, ~1 s
-python3 evals/run_evals.py             # 11 checks against the real logs on this machine
+python3 evals/run_evals.py             # 12 checks against the real logs on this machine
 ```
 
 ## Privacy and security

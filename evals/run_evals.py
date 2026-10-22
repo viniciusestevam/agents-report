@@ -251,6 +251,38 @@ def ui_local():
     return not ext and syntax is not False, {"external_refs": len(ext), "js_syntax": syntax}, str(ext[:3])
 
 
+@check("deterministic-on-real-logs")
+def deterministic_real():
+    """Freeze a copy of this machine's logs, pin the clock, run the answer commands twice with different hash seeds:
+    the output must be byte-identical. (Live logs keep growing, so they can't be compared in place.)"""
+    from agentobs.adapters import claude_code, codex, hermes
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        env = {"AGENTS_REPORT_CLAUDE_PROJECTS": str(d / "claude"), "CODEX_HOME": str(d / "codex"), "HERMES_HOME": str(d / "hermes"),
+               "PI_CODING_AGENT_DIR": "/nonexistent", "XDG_DATA_HOME": "/nonexistent", "OPENCODE_DB": "",
+               "AGENTS_REPORT_NOW": "2026-10-01T00:00:00", "TZ": "UTC"}
+        if claude_code.ROOT.is_dir():
+            shutil.copytree(claude_code.ROOT, d / "claude")
+        if codex.ROOT.is_dir():
+            shutil.copytree(codex.ROOT, d / "codex" / "sessions")
+        if hermes.ROOT.is_dir():
+            (d / "hermes").mkdir()
+            for f in hermes.ROOT.glob("state.db*"):
+                shutil.copy2(f, d / "hermes" / f.name)
+        run = lambda args, seed: subprocess.run([sys.executable, str(SCRIPTS / "agents_report.py"), *args], capture_output=True, text=True, timeout=300,
+                                                env={**__import__("os").environ, **env, "PYTHONHASHSEED": str(seed)})
+        top = json.loads(run(["report", "--json"], 0).stdout)["overview"]["top_sessions"]
+        cmds = [["report", "--json"], ["brief", "--no-dashboard"], ["sessions", "--json", "--limit", "200"], ["recommend", "--json"]]
+        if top:
+            cmds += [["explain", top[0]["key"], "--no-dashboard", "--json"], ["show", top[0]["key"], "--json"]]
+        diff = []
+        for c in cmds:
+            r1, r2 = run(c, 1), run(c, 2)
+            if r1.returncode or r2.returncode or r1.stdout != r2.stdout:
+                diff.append(f"{' '.join(c)}: rc {r1.returncode}/{r2.returncode} {r1.stderr[-200:]}")
+    return not diff, {"commands": len(cmds), "differing": len(diff)}, "; ".join(diff)
+
+
 @check("skill-portable")
 def skill_portable():
     """Copy the skill alone to a temp dir and run it isolated (-I) from there; check 3.10 syntax compatibility."""

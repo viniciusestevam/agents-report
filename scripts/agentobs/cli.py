@@ -4,11 +4,12 @@ import json
 import os
 import sys
 import time
+from collections import Counter
 from datetime import datetime
 
 from . import analyze, context, pricing
 from .store import Store, tree_cost
-from .util import prompt_tokens
+from .util import now, prompt_tokens
 
 
 def _usd(x):
@@ -30,8 +31,10 @@ def _when(t):
 
 
 def _filter(sums, a):
+    t = now()
+    sums = [s for s in sums if (s["started"] or 0) <= t]  # "as of now": with a pinned clock, later sessions don't exist yet
     if getattr(a, "days", None):
-        cutoff = time.time() - a.days * 86400
+        cutoff = t - a.days * 86400
         sums = [s for s in sums if (s["started"] or 0) >= cutoff]
     if getattr(a, "agent", None):
         sums = [s for s in sums if s["agent"] == a.agent]
@@ -128,7 +131,7 @@ def cmd_context(st, a):
 
 def report_md(sums, recs, title="Agent usage report"):
     o = analyze.overview(sums)
-    lines = [f"# {title}", "", f"Generated {datetime.now():%Y-%m-%d %H:%M} from local transcripts. "
+    lines = [f"# {title}", "", f"Generated {datetime.fromtimestamp(now()):%Y-%m-%d %H:%M} from local transcripts. "
              "Values marked *measured* come from the agents' own logs; *estimated* values are computed (price × tokens).", ""]
     lines += ["## Summary", "", "| | Value |", "|---|---:|",
               f"| Sessions (+subagents) | {o['sessions']} (+{o['subagents']}) |",
@@ -174,6 +177,153 @@ def cmd_report(st, a):
         print(f"Wrote {a.out}")
     else:
         print(out)
+
+
+# ---------- one-command answers: the script gathers the data and writes the reply, the agent relays it ----------
+
+def _dash(a, view):
+    """Dashboard URL for this view: reuses or starts the server and opens the browser. None with --no-dashboard."""
+    if getattr(a, "no_dashboard", False):
+        return None
+    url, _ = ensure_server()
+    if not a.no_open:
+        import webbrowser
+        webbrowser.open(url + view)
+    return url + view
+
+
+def brief(sums, recs, days, url):
+    """Usage summary in a few lines: total, measured meter, cache hit, costliest session, top 3 recommendations."""
+    o = analyze.overview(sums)
+    rc = o["reconciliation"]
+    out = [f"Agent usage, {f'last {days:g} days' if days else 'all time'} (as of {_when(now())})"]
+    if url:
+        out.append(f"Dashboard: {url}")
+    out.append(f"- Spend: {_usd(o['cost_estimated'])} estimated across {o['sessions']} sessions and {o['requests']:,} API requests."
+               + (f" {o['unpriced_requests']:,} requests have no known price and are not in that total." if o["unpriced_requests"] else ""))
+    if rc["sessions"]:
+        out.append(f"- Claude Code's own meter measured {_usd(rc['measured'])} for the {rc['sessions']} sessions that record it "
+                   f"(estimate for the same sessions: {_usd(rc['estimated'])}).")
+    out.append(f"- Cache hit rate: {_pct(o['cache_hit_rate'])} of prompt tokens were read from cache (measured).")
+    if o["top_sessions"] and o["top_sessions"][0]["cost"]:
+        t = o["top_sessions"][0]
+        out.append(f"- Most expensive session: {t['title'][:70]} ({t['agent']}, {t['project'] or 'no project'}), {_usd(t['cost'])} estimated.")
+    if not recs:
+        out.append("No issues found by the recommendation rules.")
+    else:
+        out.append("Top recommendations:")
+        for i, r in enumerate(recs[:3], 1):
+            out.append(f"{i}. [{r['severity']}] {r['title']}" + (f" (about {_usd(r['savings_usd'])} avoidable, estimated)" if r["savings_usd"] else ""))
+            out.append(f"   Do: {r['action']}")
+        if len(recs) > 3:
+            out.append(f"{len(recs) - 3} more in the dashboard's Recommendations view.")
+    return out
+
+
+def cmd_brief(st, a):
+    sums = _filter(st.summaries(), a)
+    recs = analyze.recommendations(sums)
+    url = _dash(a, "#/recommendations" if recs else "#/")
+    lines = brief(sums, recs, a.days, url)
+    if a.json:
+        return print(json.dumps({"as_of": now(), "days": a.days, "url": url, "overview": analyze.overview(sums),
+                                 "recommendations": recs[:3], "text": "\n".join(lines)}, default=str))
+    print("\n".join(lines))
+
+
+def explain(st, key):
+    """Why one session cost what it did: ranked findings with request numbers, and what filled the context
+    at its costliest request. Returns (data, lines, costliest request index or None)."""
+    sums = st.summaries()
+    s = next(x for x in sums if x["key"] == key)
+    full = st.session(key, with_api_log=True)
+    reqs = full["requests"]
+    per_call = bool(reqs) and not any(r.get("aggregate") for r in reqs)
+    total = tree_cost(sums, key)
+    c = s["cost"]
+    head = [f"{s['title']} [{s['id'][:8]}]",
+            f"{s['agent']} · {s['project'] or 'no project'} · {_when(s['started'])} → {_when(s['ended'])} · "
+            + (", ".join(f"{m} ×{n}" for m, n in s["models"].items()) or "no model calls"),
+            f"Cost: {_usd(c['estimated'])} estimated"
+            + (f", {_usd(total)} with its {s['n_subagents']} subagents" if s["n_subagents"] else "")
+            + (f", {_usd(c['measured'])} measured by the agent's own meter" if c["measured"] is not None else "")
+            + (f"; no price for {', '.join(c['unpriced_models'])}" if c["unpriced_models"] else "") + "."]
+    priced = c["estimated"] is not None
+
+    def cost(x):  # unknown prices stay unknown, never $0
+        return f"about {_usd(x)} (estimated)" if priced and x is not None else "cost unavailable (no price for the model)"
+
+    found = []  # (estimated usd or None, sentence); ranked by usd below
+    worst = None
+    if per_call:
+        worst = max(range(len(reqs)), key=lambda i: (reqs[i]["cost"] if reqs[i]["cost"] is not None else -1, prompt_tokens(reqs[i]["usage"])))
+        r, u = reqs[worst], reqs[worst]["usage"]
+        found.append((r["cost"], f"Costliest request: #{worst} ({r['model']}), {_usd(r['cost'])}: {prompt_tokens(u):,} prompt tokens "
+                      f"({u['cache_read']:,} read from cache, {u['cache_write_5m'] + u['cache_write_1h']:,} written, {u['input']:,} uncached) and {u['output']:,} output."))
+        peak = max(range(len(reqs)), key=lambda i: prompt_tokens(reqs[i]["usage"]))
+        pt, win = prompt_tokens(reqs[peak]["usage"]), s.get("context_window")
+        found.append((None, f"Context peaked at {pt:,} tokens at request #{peak}" + (f" ({pt / win:.0%} of the {win:,} window)" if win else "")
+                      + f"; the first request used {s['baseline_context'] or 0:,}."))
+    sig = s["signals"]
+    rb = sig["cache_rebuilds"]
+    if rb:
+        waste = sum(x["waste_usd"] or 0 for x in rb)
+        big = max(rb, key=lambda x: x["write_tokens"])
+        causes = ", ".join(f"{k} ×{v}" for k, v in Counter(x["cause"] for x in rb).most_common())
+        found.append((waste, f"The prompt cache was rebuilt {len(rb)} time{'s' if len(rb) > 1 else ''} ({causes}), extra {cost(waste)}; "
+                      f"the largest at request #{big['req']} wrote {big['write_tokens']:,} tokens."))
+    for x in sorted(sig["large_outputs"], key=lambda x: -(x["carry_usd"] or 0))[:3]:
+        found.append((x["carry_usd"], f"A {x['tool']} result of {x['chars']:,} characters (≈{x['est_tokens']:,} tokens) stayed in context for every later request, "
+                      f"{cost(x['carry_usd'])}."))
+    for x in [i for i in sig["injections"] if (i["carry_usd"] or 0) >= 0.05][:2]:
+        what = x["name"] if x["name"] == x["kind"] else f"{x['kind']} '{x['name']}'"
+        found.append((x["carry_usd"], f"Injected context ({what}): {x['chars']:,} characters"
+                      + (f" over {x['count']} injections" if x["count"] > 1 else "") + f", carried in later requests, {cost(x['carry_usd'])}."))
+    if s["n_subagents"] and total is not None and c["estimated"] is not None and total > 0:
+        sub = total - c["estimated"]
+        found.append((sub, f"{s['n_subagents']} subagents cost {_usd(sub)}, {sub / total:.0%} of the session's total (estimated)."))
+    for x in sig["repeated_calls"][:1]:
+        found.append((None, f"{x['tool']} ran {x['count']} times with the same input and no edit in between: {x['input'][:80]}"))
+    if s["n_compactions"]:
+        found.append((None, f"The context was compacted {s['n_compactions']} time{'s' if s['n_compactions'] > 1 else ''}."))
+    if s["n_tool_errors"]:
+        found.append((None, f"{s['n_tool_errors']} of {s['n_tool_calls']} tool calls failed."))
+    if not per_call:
+        found.append((None, f"{s['agent']} logs token totals per model, not per request, so per-request findings are unavailable."))
+    found = [(u if priced else None, t) for u, t in found]
+    found.sort(key=lambda f: -(f[0] or 0))  # stable: equal amounts keep the order above
+    ctx = None
+    if worst is not None:
+        try:
+            ci = context.inspect(full, worst)
+            mp = (ci.get("request") or {}).get("measured_prompt_tokens") or 0
+            ctx = {"req": worst, "basis": ci.get("basis"), "groups": [{"group": g["group"], "tokens": g["tokens"], "count": g["count"],
+                                                                         "share": round(g["tokens"] / mp, 4) if mp else None} for g in ci.get("groups", [])[:3]]}
+        except Exception:  # context rebuild is best-effort; the findings above stand on their own
+            ctx = None
+    lines = head + ["", "Findings, largest cost first:"] + [f"{i}. {t}" for i, (_, t) in enumerate(found, 1)]
+    if ctx and ctx["groups"]:
+        lines += ["", f"Largest parts of the context at request #{worst} ({ctx['basis']} basis):"]
+        lines += [f"- {g['group']}: {g['tokens']:,} tokens" + (f" ({g['share']:.0%})" if g["share"] is not None else "") + f", {g['count']} items" for g in ctx["groups"]]
+    data = {"key": key, "header": head, "findings": [{"usd": u, "text": t} for u, t in found], "costliest_request": worst, "context": ctx}
+    return data, lines, worst
+
+
+def cmd_explain(st, a):
+    from urllib.parse import quote
+    key = resolve(st, a.session)
+    if not key:
+        print(f"No unique session matches {a.session!r}.", file=sys.stderr)
+        return 2
+    data, lines, worst = explain(st, key)
+    base = f"#/session/{quote(key, safe='')}"
+    url = _dash(a, base)
+    if url:
+        data["urls"] = {"trace": url, "context": url + (f"?tab=context&req={worst}" if worst is not None else "?tab=context")}
+        lines[3:3] = [f"Dashboard: {data['urls']['trace']}", f"Context at the costliest request: {data['urls']['context']}"]
+    if a.json:
+        return print(json.dumps({**data, "text": "\n".join(lines)}, default=str))
+    print("\n".join(lines))
 
 
 def cmd_recommend(st, a):
@@ -316,6 +466,7 @@ def cmd_package(st, a):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="agents-report", description="Local observability for AI coding agents.")
+    p.add_argument("--now", help="pin the clock (epoch seconds or ISO date/time) so --days windows and report dates are reproducible; same as AGENTS_REPORT_NOW")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def common(sp, filters=True):
@@ -351,9 +502,18 @@ def main(argv=None):
     sp = common(sub.add_parser("report", help="Markdown report with recommendations"))
     sp.add_argument("--out", help="write to file")
     common(sub.add_parser("recommend", help="evidence-backed recommendations"))
+    sp = common(sub.add_parser("brief", help="ready-to-relay usage summary: total, cache, top 3 recommendations, dashboard URL"))
+    sp.add_argument("--no-open", action="store_true", help="print the dashboard URL without opening a browser")
+    sp.add_argument("--no-dashboard", action="store_true", help="don't start the dashboard; no URL in the output")
+    sp = common(sub.add_parser("explain", help="ready-to-relay answer to 'why was this session expensive/slow?'"), filters=False)
+    sp.add_argument("session", help="key, id prefix, or 'latest'")
+    sp.add_argument("--no-open", action="store_true", help="print the dashboard URLs without opening a browser")
+    sp.add_argument("--no-dashboard", action="store_true", help="don't start the dashboard; no URLs in the output")
     common(sub.add_parser("doctor", help="check data sources and parsing"), filters=False)
     sub.add_parser("package", help="zip this skill for import into another agent").add_argument("--out", help="zip path (default ./agents-report.zip)")
     a = p.parse_args(argv)
+    if a.now:
+        os.environ["AGENTS_REPORT_NOW"] = a.now  # also reaches a dashboard server started from here
 
     st = Store()
     if a.cmd == "serve":
@@ -361,4 +521,4 @@ def main(argv=None):
         serve(a.port, st, a.open, auto_stop=a.auto_stop)
         return 0
     return {"dashboard": cmd_dashboard, "stop": cmd_stop, "sessions": cmd_sessions, "show": cmd_show, "context": cmd_context, "report": cmd_report,
-            "recommend": cmd_recommend, "doctor": cmd_doctor, "package": cmd_package}[a.cmd](st, a) or 0
+            "recommend": cmd_recommend, "brief": cmd_brief, "explain": cmd_explain, "doctor": cmd_doctor, "package": cmd_package}[a.cmd](st, a) or 0
