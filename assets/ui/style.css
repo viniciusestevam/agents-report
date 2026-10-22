@@ -517,13 +517,14 @@ button.tr-car:hover { background: var(--pill); color: var(--ink); }
 .tr-stats > div:last-child:nth-child(odd) { grid-column: span 2; }
 
 /* Sessions grouped by project */
-tr.grp td { background: color-mix(in srgb, var(--raised) 55%, transparent); border-top: 1px solid var(--line); }
-tr.grp:hover td { background: var(--raised); }
+tr.grp td { border-top: 1px solid var(--line); }
 tr.grp .t1 { font-weight: 500; }
 .grp-name { display: flex; align-items: center; }
-.grp-car { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 6px; color: var(--ink-3); vertical-align: -3px; }
+.grp-car { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 6px; color: var(--ink-3); vertical-align: -3px; border-radius: 4px; transition: color .12s, background .12s; }
+tr.grp:hover .grp-car { color: var(--ink); background: var(--pill); }
 .grp-car svg { width: 14px; height: 14px; transition: transform .15s; }
 tr.grp[aria-expanded="true"] .grp-car svg { transform: rotate(90deg); }
 .grp-meta { display: flex; align-items: center; gap: 10px; padding-left: 24px; }
 .grp-meta .share { width: 80px; flex: none; }
-tr.in-grp td:first-child { padding-left: 34px; }
+tr.in-grp td:first-child { padding-left: 34px; position: relative; }
+tr.in-grp td:first-child::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; border-left: 1px solid var(--line); }  /* ties the sessions to their project */
