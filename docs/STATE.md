@@ -29,7 +29,11 @@ Agent Skill (agentskills.io spec) that also serves the web UI.
   tested across processes with different hash seeds (unit test on fixtures, eval on a frozen copy of the real logs).
   `--now`/`AGENTS_REPORT_NOW` pins the clock; reports leave out sessions that started after it.
 - **Python stdlib only.** Zero deps = portable skill. Codex `.jsonl.zst` via `compression.zstd` (3.14+) or the `zstd` CLI.
-- **The skill folder is the whole product.** `skills/agents-report/` holds SKILL.md, code, the prebuilt UI, references, tests, evals and these docs; `package` zips it (minus caches and eval history) for import into any agent. Paths in this file are relative to the skill folder. Repo root only has a pointer README and the project-local symlinks in `.claude/skills/` and `.agents/skills/`.
+- **Repository layout (2026-10-22, modeled on plannotator).** `skills/agents-report/` is the product: the skill (SKILL.md,
+  scripts, prebuilt UI, references) and the Claude Code plugin (`.claude-plugin/plugin.json`); `package` zips it. The
+  repository root holds the README, `.claude-plugin/marketplace.json` (lists the plugin), `.github/` (README images,
+  CI, issue templates), `tests/`, `evals/`, `tools/` (synthetic demo data, screenshot recorder) and these docs.
+  Paths in this file are relative to `skills/agents-report/` unless they start with tests/, evals/, tools/ or docs/.
 - **Vanilla HTML/CSS/JS UI**, own SVG charts, system fonts (no font downloads), serif only for titles. Design follows the design-taste-frontend app-screen rules, except one deliberate deviation: a warm neutral ground with a clay data hue (that skill bans cream+terracotta; the user asked for an Anthropic-like warmth). Accent used on data only.
 - **Facts vs estimates:** every number labelled measured / estimated / unavailable.
 - **Pricing:** Claude rates from Anthropic's claude-api skill (cached 2026-10-06). No verified OpenAI prices → Codex cost unavailable unless `~/.config/agents-report/prices.json`.

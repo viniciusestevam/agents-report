@@ -19,7 +19,8 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
-SKILL = ROOT = Path(__file__).resolve().parent.parent  # the skill folder
+ROOT = Path(__file__).resolve().parent.parent  # the repository
+SKILL = ROOT / "skills" / "agents-report"  # what ships: the skill / plugin
 SCRIPTS = SKILL / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 from agentobs.cli import PACKAGE_EXCLUDE  # noqa: E402

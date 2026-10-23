@@ -11,8 +11,9 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = ROOT / "scripts"  # ROOT is the skill folder
+ROOT = Path(__file__).resolve().parent.parent  # the repository
+SKILL = ROOT / "skills" / "agents-report"  # what ships: the skill / plugin
+SCRIPTS = SKILL / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -354,7 +355,7 @@ class TestDeterminism(Base):
 class TestSkill(unittest.TestCase):
     def test_frontmatter_follows_agentskills_spec(self):
         import re
-        skill = ROOT
+        skill = SKILL
         text = (skill / "SKILL.md").read_text()
         m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
         self.assertTrue(m)

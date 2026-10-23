@@ -8,5 +8,5 @@
   "repository": "https://github.com/viniciusestevam/agents-report",
   "license": "MIT",
   "keywords": ["observability", "cost", "tokens", "prompt-cache", "context-window", "tracing", "codex", "claude-code"],
-  "icon": "./assets/brand/icon.png"
+  "icon": "./assets/icon.png"
 }

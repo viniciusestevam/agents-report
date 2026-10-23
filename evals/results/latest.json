@@ -1,11 +1,11 @@
 {
- "time": "2026-10-22T20:56:50",
+ "time": "2026-10-22T21:16:09",
  "checks": {
   "unit-tests": {
    "pass": true,
-   "metric": "Ran 41 tests in 2.631s",
+   "metric": "Ran 41 tests in 2.634s",
    "detail": "",
-   "s": 2.7
+   "s": 2.72
   },
   "parse-all-logs": {
    "pass": true,
@@ -14,10 +14,10 @@
     "sessions": 59,
     "subagents": 32,
     "bad_lines": 0,
-    "cold_s": 1.41
+    "cold_s": 1.62
    },
    "detail": "",
-   "s": 1.41
+   "s": 1.62
   },
   "pricing-reproduces-claude-meter": {
    "pass": true,
@@ -27,7 +27,7 @@
     "median_rel_error": 0.0
    },
    "detail": "",
-   "s": 1.79
+   "s": 1.78
   },
   "logged-cost-never-exceeds-meter": {
    "pass": true,
@@ -54,7 +54,7 @@
     "violations": 0
    },
    "detail": "",
-   "s": 0.97
+   "s": 0.94
   },
   "context-inspector": {
    "pass": true,
@@ -70,7 +70,7 @@
     "slowest_s": 0.005
    },
    "detail": "",
-   "s": 2.83
+   "s": 2.84
   },
   "recommendations-grounded": {
    "pass": true,
@@ -86,7 +86,7 @@
      "subagent-model",
      "unlogged-spend"
     ],
-    "estimated_savings_usd": 45.9
+    "estimated_savings_usd": 46.32
    },
    "detail": "",
    "s": 0.0
@@ -95,11 +95,11 @@
    "pass": true,
    "metric": {
     "requests": 190,
-    "p95_s": 0.105,
-    "max_s": 0.191
+    "p95_s": 0.102,
+    "max_s": 0.203
    },
    "detail": "",
-   "s": 6.25
+   "s": 6.33
   },
   "ui-is-local-only": {
    "pass": true,
@@ -117,7 +117,7 @@
     "differing": 0
    },
    "detail": "",
-   "s": 18.95
+   "s": 20.59
   },
   "skill-portable": {
    "pass": true,
@@ -128,7 +128,7 @@
     "skill_md_lines": 69
    },
    "detail": "",
-   "s": 3.07
+   "s": 3.15
   }
  },
  "summary": {
