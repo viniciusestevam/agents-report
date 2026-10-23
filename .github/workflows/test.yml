@@ -29,6 +29,35 @@ jobs:
           mkdir -p /tmp/skill && unzip -q /tmp/agents-report.zip -d /tmp/skill
           cd /tmp && python -I /tmp/skill/agents-report/scripts/agents_report.py doctor
 
+  install:
+    # the README's install commands, on clean machines: uv and pipx from this checkout
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        tool: [uv, pipx]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        if: matrix.tool == 'uv'
+      - name: Install with ${{ matrix.tool }}
+        run: |
+          if [ "${{ matrix.tool }}" = uv ]; then uv tool install .; else python -m pip install -q pipx && pipx install .; fi
+      - name: The command runs and serves the dashboard from the installed copy
+        run: |
+          cd "$RUNNER_TEMP"
+          agents-report --version
+          agents-report doctor
+          agents-report brief --no-dashboard
+          url=$(agents-report dashboard --no-open --json | python -c "import json,sys; print(json.load(sys.stdin)['url'].split('#')[0])")
+          curl -fsS "$url" | grep -q "<title>Agents Report"
+          curl -fsS "${url}app.js" > /dev/null
+          agents-report stop
+
   commits:
     runs-on: ubuntu-latest
     steps:
