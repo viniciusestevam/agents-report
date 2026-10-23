@@ -106,8 +106,11 @@ values), an estimated saving, and the concrete fix.
 
 ## Install in Claude Code
 
+Add the marketplace, then install the plugin:
+
 ```
-/plugin install agents-report --marketplace viniciusestevam/agents-report
+/plugin marketplace add viniciusestevam/agents-report
+/plugin install agents-report@agents-report
 ```
 
 Then open the dashboard:
@@ -122,8 +125,9 @@ Then open the dashboard:
 Claude also uses the skill on its own when you ask about cost, tokens, context or a past session
 ([examples](#ask-claude)).
 
-The one-line install needs Claude Code 2.1.275 or later; on older versions run
-`/plugin marketplace add viniciusestevam/agents-report`, then `/plugin install agents-report@agents-report`.
+On Claude Code 2.1.275 or later, one line does both install steps:
+`/plugin install agents-report --marketplace viniciusestevam/agents-report`. From your shell:
+`claude plugin marketplace add viniciusestevam/agents-report && claude plugin install agents-report@agents-report`.
 Update with `/plugin marketplace update agents-report`.
 
 The skill runs with the `python3` on your `PATH`, which must be 3.10 or later (`python3 --version`; the one
