@@ -26,10 +26,6 @@ answers with the numbers, ranked by cost, with the change to make.
 It reads the logs of Claude Code, Codex, Hermes, Pi and OpenCode, so one report covers every agent you
 use. Nothing leaves your machine.
 
-> [!TIP]
-> **Run `/agents-report` in Claude Code to open the dashboard.** It's the main way in: overview, sessions,
-> traces, context window and recommendations, in your browser, with a short summary in the chat.
-
 <table>
 <tr>
 <td width="38%" valign="middle">
@@ -115,7 +111,7 @@ Add the marketplace, then install the plugin:
 
 Then open the dashboard:
 
-> [!IMPORTANT]
+> [!TIP]
 > ```
 > /agents-report
 > ```
