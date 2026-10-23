@@ -28,3 +28,21 @@ jobs:
           python .agents/skills/agents-report/scripts/agents_report.py package --out /tmp/agents-report.zip
           mkdir -p /tmp/skill && unzip -q /tmp/agents-report.zip -d /tmp/skill
           cd /tmp && python -I /tmp/skill/agents-report/scripts/agents_report.py doctor
+
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Commit messages follow Conventional Commits
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then RANGE="$PR_BASE..$PR_HEAD"; else RANGE="$BEFORE..$GITHUB_SHA"; fi
+          # a new branch or a force push has no usable "before": check the whole history
+          git cat-file -e "${RANGE%%..*}^{commit}" 2>/dev/null || RANGE=HEAD
+          python3 tools/check_commits.py --range "$RANGE"
