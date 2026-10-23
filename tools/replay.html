@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claude Code replay</title>
+<style>
+  :root { --bg: #1a1918; --panel: #232220; --ink: #ecebe6; --dim: #9a968c; --faint: #6c685f; --accent: #d97757; --green: #7bbf8a; --line: #3a3834; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0f0f0e; }
+  body { display: grid; place-items: center; font: 15px/1.55 "SF Mono", ui-monospace, Menlo, monospace; color: var(--ink); }
+  .win { width: 1240px; height: 800px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  .bar { height: 38px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 14px; gap: 8px; color: var(--dim); font: 13px -apple-system, system-ui, sans-serif; }
+  .bar i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .bar .t { flex: 1; text-align: center; margin-right: 60px; }
+  .term { flex: 1; overflow: hidden; padding: 18px 26px 10px; display: flex; flex-direction: column; }
+  .log { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .welcome { border: 1px solid var(--accent); border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; color: var(--dim); align-self: flex-start; }
+  .welcome b { color: var(--ink); font-weight: 600; }
+  .welcome .s { color: var(--accent); }
+  .row { margin: 0 0 12px; white-space: pre-wrap; }
+  .you { color: var(--dim); }
+  .you b { color: var(--ink); font-weight: 400; }
+  .dot { color: var(--accent); }
+  .dot.ok { color: var(--green); }
+  .tool b { font-weight: 600; }
+  .res { color: var(--dim); padding-left: 2ch; }
+  .res .more { color: var(--faint); }
+  .spin { color: var(--accent); }
+  .spin span { color: var(--dim); }
+  .ans { display: grid; grid-template-columns: 2ch 1fr; white-space: normal; }
+  .ans h2 { font-size: 15px; margin: 10px 0 4px; font-weight: 700; }
+  .ans p, .ans li { margin: 0 0 6px; }
+  .ans ol, .ans ul { margin: 0 0 6px; padding-left: 3.5ch; }
+  .ans li { padding-left: .5ch; }
+  .ans strong { font-weight: 700; }
+  .ans code { color: #e7b07f; }
+  .ans .blk { opacity: 0; transition: opacity .25s; }
+  .ans .blk.on { opacity: 1; }
+  .input { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; display: flex; gap: 1ch; min-height: 46px; }
+  .input .caret { display: inline-block; width: 9px; height: 18px; background: var(--ink); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .hint { color: var(--faint); font-size: 12px; padding: 6px 4px 0; display: flex; justify-content: space-between; }
+  .cap { position: fixed; right: 18px; bottom: 14px; color: #6f6b62; font: 12px -apple-system, system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="t">alex@laptop: ~/code/storefront — claude</span></div>
+  <div class="term">
+    <div class="log" id="log">
+      <div class="welcome"><span class="s">✻</span> Welcome to <b>Claude Code</b><br><span>cwd: ~/code/storefront</span></div>
+    </div>
+    <div class="input"><span class="dim">&gt;</span><span id="typed"></span><span class="caret"></span></div>
+    <div class="hint"><span>? for shortcuts</span><span>agents-report skill installed</span></div>
+  </div>
+</div>
+<div class="cap">Replay of a real Claude Code session, run on synthetic demo data</div>
+<script>
+const STEPS = /*STEPS*/[];
+const PROMPT = "/agents-report what did my coding agents cost this month, and what should I change?";
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const log = document.getElementById("log");
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+function add(html, cls) { const d = document.createElement("div"); d.className = "row " + (cls || ""); d.innerHTML = html; log.append(d); return d; }
+function md(text) {  // tiny markdown: headings, lists, paragraphs, bold, code
+  const blocks = [];
+  let list = null;
+  for (const raw of text.split("\n")) {
+    const l = raw.trimEnd();
+    if (!l) continue;  // a blank line keeps a list going
+    const ol = l.match(/^(\d+)\.\s+(.*)/), ul = l.match(/^[-*]\s+(.*)/);
+    if (ol || ul) {
+      const tag = ol ? "ol" : "ul";
+      if (!list || list.tag !== tag) { list = { tag, items: [] }; blocks.push(list); }
+      list.items.push(ol ? `<li class="blk" value="${ol[1]}">${inline(ol[2])}</li>` : `<li class="blk">${inline(ul[1])}</li>`);
+      continue;
+    }
+    list = null;
+    const hh = l.match(/^#+\s+(.*)/);
+    blocks.push(hh ? `<h2 class="blk">${inline(hh[1])}</h2>` : `<p class="blk">${inline(l)}</p>`);
+  }
+  return blocks.map((b) => typeof b === "string" ? b : `<${b.tag}>${b.items.join("")}</${b.tag}>`).join("");
+}
+async function spinner(word, ms) {
+  const d = add(`<span class="spin">✻</span> <span>${word}…</span>`);
+  const frames = ["✻", "✺", "✹", "✸", "✷", "✶"];
+  for (let i = 0; i < ms / 120; i++) { d.firstChild.textContent = frames[i % frames.length]; await sleep(120); }
+  d.remove();
+}
+async function run() {
+  await sleep(900);
+  const typed = document.getElementById("typed");
+  for (const ch of PROMPT) { typed.textContent += ch; await sleep(ch === " " ? 55 : 32); }
+  await sleep(500);
+  typed.textContent = "";
+  add(`&gt; <b>${esc(PROMPT)}</b>`, "you");
+  await spinner("Reading the agents-report skill", 1300);
+  for (const st of STEPS) {
+    if (st.kind === "tool") {
+      add(`<span class="dot">⏺</span> <span class="tool"><b>Bash</b>(${esc(st.cmd)})</span>`);
+      await spinner("Running", 900);
+    } else if (st.kind === "result") {
+      const lines = st.text.trim().split("\n");
+      const shown = lines.slice(0, 2).map(esc).join("\n");
+      add(`⎿  ${shown}${lines.length > 2 ? `\n<span class="more">… +${lines.length - 2} lines (ctrl+o to expand)</span>` : ""}`, "res");
+      log.lastChild.previousSibling.querySelector(".dot").classList.add("ok");
+      await sleep(700);
+    } else if (st.kind === "text") {
+      await spinner("Thinking", 1400);
+      const d = add(`<span class="dot ok">⏺</span><div>${md(st.text)}</div>`, "ans");
+      for (const b of d.querySelectorAll(".blk")) { b.classList.add("on"); await sleep(b.tagName === "H2" ? 350 : 520); }
+    }
+  }
+  await sleep(2500);
+  window.done = true;
+}
+run();
+</script>
+</body>
+</html>
