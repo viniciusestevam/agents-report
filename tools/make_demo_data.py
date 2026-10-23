@@ -4,7 +4,7 @@ Writes Claude Code (with exact api-request logs), Codex and Hermes data under OU
 and prints the environment variables that point Agents Report at it:
 
     python3 tools/make_demo_data.py /tmp/demo
-    eval "$(python3 tools/make_demo_data.py /tmp/demo --env)"; python3 skills/agents-report/scripts/agents_report.py serve --port 48799
+    eval "$(python3 tools/make_demo_data.py /tmp/demo --env)"; python3 .agents/skills/agents-report/scripts/agents_report.py serve --port 48799
 """
 import hashlib
 import json
@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "agents-report" / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".agents" / "skills" / "agents-report" / "scripts"))
 from agentobs import pricing  # noqa: E402
 
 R = random.Random(7)

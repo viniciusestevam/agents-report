@@ -123,14 +123,14 @@ Update later with `/plugin marketplace update agents-report`.
 
 ### Agent Skill (Codex, Claude Code and other agentskills.io agents)
 
-The skill lives in [`skills/agents-report/`](skills/agents-report). Clone the repository and link
+The skill lives in [`.agents/skills/agents-report/`](.agents/skills/agents-report). Clone the repository and link
 the skill into your agent's skills folder, so `git pull` keeps it up to date:
 
 ```bash
 git clone https://github.com/viniciusestevam/agents-report ~/src/agents-report
 
-ln -s ~/src/agents-report/skills/agents-report ~/.agents/skills/agents-report   # Codex and other agents
-ln -s ~/src/agents-report/skills/agents-report ~/.claude/skills/agents-report   # Claude Code
+ln -s ~/src/agents-report/.agents/skills/agents-report ~/.agents/skills/agents-report   # Codex and other agents
+ln -s ~/src/agents-report/.agents/skills/agents-report ~/.claude/skills/agents-report   # Claude Code
 ```
 
 Use `<project>/.agents/skills/` or `<project>/.claude/skills/` to install it for one project. Keep the
@@ -139,7 +139,7 @@ folder name `agents-report`: it must match `name` in `SKILL.md`.
 Or build a single zip and unzip it where you need it:
 
 ```bash
-python3 skills/agents-report/scripts/agents_report.py package     # writes agents-report.zip
+python3 .agents/skills/agents-report/scripts/agents_report.py package     # writes agents-report.zip
 unzip agents-report.zip -d ~/.agents/skills/
 ```
 
@@ -148,7 +148,7 @@ unzip agents-report.zip -d ~/.agents/skills/
 Nothing to install. From the cloned repository:
 
 ```bash
-alias agents-report="python3 $PWD/skills/agents-report/scripts/agents_report.py"
+alias agents-report="python3 $PWD/.agents/skills/agents-report/scripts/agents_report.py"
 agents-report doctor        # which agents' logs were found
 agents-report dashboard     # open the web UI at http://127.0.0.1:48765
 ```
@@ -181,7 +181,7 @@ Findings, largest cost first:
 
 ## Commands
 
-`agents-report <command>` (or `python3 skills/agents-report/scripts/agents_report.py <command>`).
+`agents-report <command>` (or `python3 .agents/skills/agents-report/scripts/agents_report.py <command>`).
 Every command accepts `--json`.
 
 | Command | What it does |
@@ -216,7 +216,7 @@ The dashboard server starts in the background, is reused across calls, and stops
 | OpenCode | `~/.local/share/opencode/opencode*.db` (`OPENCODE_DB`), read-only | Yes (from its source, tested on fixtures) |
 
 Adding an agent means writing one adapter module: see
-[references/adapters.md](skills/agents-report/references/adapters.md).
+[references/adapters.md](.agents/skills/agents-report/references/adapters.md).
 
 ## How the numbers work
 
@@ -229,8 +229,8 @@ Adding an agent means writing one adapter module: see
   (never $0) until you add `~/.config/agents-report/prices.json`.
 - **Savings are estimates** from logged tokens and current prices; their effect on output quality isn't measured.
 
-Definitions: [metrics](skills/agents-report/references/metrics.md) ·
-[recommendation rules](skills/agents-report/references/recommendations.md).
+Definitions: [metrics](.agents/skills/agents-report/references/metrics.md) ·
+[recommendation rules](.agents/skills/agents-report/references/recommendations.md).
 
 ## Privacy
 
@@ -246,7 +246,7 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ```
 .claude-plugin/marketplace.json   Claude Code marketplace (lists the plugin below)
-skills/agents-report/             the plugin and skill: everything that ships
+.agents/skills/agents-report/     the plugin and skill: everything that ships
   SKILL.md                        instructions agents load
   .claude-plugin/plugin.json      plugin manifest
   scripts/                        CLI (agents_report.py) and the agentobs package

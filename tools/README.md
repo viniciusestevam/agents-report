@@ -16,7 +16,7 @@ real transcript.
 D=/tmp/agents-report-demo
 python3 tools/make_demo_data.py $D
 eval "$(python3 tools/make_demo_data.py $D --env)"
-python3 skills/agents-report/scripts/agents_report.py serve --port 48799 &
+python3 .agents/skills/agents-report/scripts/agents_report.py serve --port 48799 &
 
 node tools/record.mjs shots .github/assets/screenshots http://127.0.0.1:48799/
 ```

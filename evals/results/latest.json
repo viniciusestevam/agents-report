@@ -1,11 +1,11 @@
 {
- "time": "2026-10-22T21:16:09",
+ "time": "2026-10-22T21:19:51",
  "checks": {
   "unit-tests": {
    "pass": true,
-   "metric": "Ran 41 tests in 2.634s",
+   "metric": "Ran 41 tests in 2.666s",
    "detail": "",
-   "s": 2.72
+   "s": 2.77
   },
   "parse-all-logs": {
    "pass": true,
@@ -14,10 +14,10 @@
     "sessions": 59,
     "subagents": 32,
     "bad_lines": 0,
-    "cold_s": 1.62
+    "cold_s": 1.65
    },
    "detail": "",
-   "s": 1.62
+   "s": 1.65
   },
   "pricing-reproduces-claude-meter": {
    "pass": true,
@@ -54,7 +54,7 @@
     "violations": 0
    },
    "detail": "",
-   "s": 0.94
+   "s": 0.95
   },
   "context-inspector": {
    "pass": true,
@@ -67,10 +67,10 @@
      1.89
     ],
     "max_sum_error": 0.0002,
-    "slowest_s": 0.005
+    "slowest_s": 0.006
    },
    "detail": "",
-   "s": 2.84
+   "s": 3.07
   },
   "recommendations-grounded": {
    "pass": true,
@@ -86,7 +86,7 @@
      "subagent-model",
      "unlogged-spend"
     ],
-    "estimated_savings_usd": 46.32
+    "estimated_savings_usd": 46.38
    },
    "detail": "",
    "s": 0.0
@@ -95,11 +95,11 @@
    "pass": true,
    "metric": {
     "requests": 190,
-    "p95_s": 0.102,
-    "max_s": 0.203
+    "p95_s": 0.106,
+    "max_s": 0.21
    },
    "detail": "",
-   "s": 6.33
+   "s": 6.76
   },
   "ui-is-local-only": {
    "pass": true,
@@ -108,7 +108,7 @@
     "js_syntax": true
    },
    "detail": "",
-   "s": 0.06
+   "s": 0.09
   },
   "deterministic-on-real-logs": {
    "pass": true,
@@ -117,7 +117,7 @@
     "differing": 0
    },
    "detail": "",
-   "s": 20.59
+   "s": 22.1
   },
   "skill-portable": {
    "pass": true,
@@ -128,7 +128,7 @@
     "skill_md_lines": 69
    },
    "detail": "",
-   "s": 3.15
+   "s": 3.81
   }
  },
  "summary": {

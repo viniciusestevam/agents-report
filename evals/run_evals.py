@@ -20,7 +20,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent  # the repository
-SKILL = ROOT / "skills" / "agents-report"  # what ships: the skill / plugin
+SKILL = ROOT / ".agents" / "skills" / "agents-report"  # what ships: the skill / plugin
 SCRIPTS = SKILL / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 from agentobs.cli import PACKAGE_EXCLUDE  # noqa: E402

@@ -12,5 +12,5 @@ built to keep them on your machine:
 
 Please report security issues privately through
 [GitHub's private vulnerability reporting](https://github.com/viniciusestevam/agents-report/security/advisories/new)
-rather than in a public issue. Include the version (`version` in `skills/agents-report/SKILL.md`),
+rather than in a public issue. Include the version (`version` in `.agents/skills/agents-report/SKILL.md`),
 your OS and Python version, and steps to reproduce. Expect a first reply within a few days.

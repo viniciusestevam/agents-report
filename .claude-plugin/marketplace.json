@@ -5,7 +5,7 @@
   "plugins": [
     {
       "name": "agents-report",
-      "source": "./skills/agents-report",
+      "source": "./.agents/skills/agents-report",
       "description": "See what your AI coding agents cost, and why. Local only.",
       "category": "productivity",
       "tags": ["observability", "cost", "tokens"]

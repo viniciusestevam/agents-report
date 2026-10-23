@@ -25,6 +25,6 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Skill runs isolated from the repository
         run: |
-          python skills/agents-report/scripts/agents_report.py package --out /tmp/agents-report.zip
+          python .agents/skills/agents-report/scripts/agents_report.py package --out /tmp/agents-report.zip
           mkdir -p /tmp/skill && unzip -q /tmp/agents-report.zip -d /tmp/skill
           cd /tmp && python -I /tmp/skill/agents-report/scripts/agents_report.py doctor

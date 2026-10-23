@@ -13,7 +13,7 @@ body:
     id: doctor
     attributes:
       label: Output of `doctor`
-      description: "`python3 skills/agents-report/scripts/agents_report.py doctor` (it shows paths and counts, no transcript content)"
+      description: "`python3 .agents/skills/agents-report/scripts/agents_report.py doctor` (it shows paths and counts, no transcript content)"
       render: text
   - type: input
     id: env
