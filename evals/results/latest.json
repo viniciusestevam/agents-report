@@ -1,11 +1,11 @@
 {
- "time": "2026-10-22T21:33:03",
+ "time": "2026-10-22T21:45:29",
  "checks": {
   "unit-tests": {
    "pass": true,
-   "metric": "Ran 43 tests in 2.648s",
+   "metric": "Ran 43 tests in 2.862s",
    "detail": "",
-   "s": 2.73
+   "s": 2.96
   },
   "parse-all-logs": {
    "pass": true,
@@ -14,10 +14,10 @@
     "sessions": 59,
     "subagents": 32,
     "bad_lines": 0,
-    "cold_s": 1.65
+    "cold_s": 1.8
    },
    "detail": "",
-   "s": 1.65
+   "s": 1.8
   },
   "pricing-reproduces-claude-meter": {
    "pass": true,
@@ -27,7 +27,7 @@
     "median_rel_error": 0.0
    },
    "detail": "",
-   "s": 1.78
+   "s": 1.9
   },
   "logged-cost-never-exceeds-meter": {
    "pass": true,
@@ -54,7 +54,7 @@
     "violations": 0
    },
    "detail": "",
-   "s": 0.94
+   "s": 1.06
   },
   "context-inspector": {
    "pass": true,
@@ -67,10 +67,10 @@
      1.89
     ],
     "max_sum_error": 0.0002,
-    "slowest_s": 0.005
+    "slowest_s": 0.006
    },
    "detail": "",
-   "s": 3.01
+   "s": 3.04
   },
   "recommendations-grounded": {
    "pass": true,
@@ -86,7 +86,7 @@
      "subagent-model",
      "unlogged-spend"
     ],
-    "estimated_savings_usd": 46.56
+    "estimated_savings_usd": 46.67
    },
    "detail": "",
    "s": 0.0
@@ -95,11 +95,11 @@
    "pass": true,
    "metric": {
     "requests": 190,
-    "p95_s": 0.107,
-    "max_s": 0.187
+    "p95_s": 0.12,
+    "max_s": 0.245
    },
    "detail": "",
-   "s": 6.42
+   "s": 6.95
   },
   "ui-is-local-only": {
    "pass": true,
@@ -108,7 +108,7 @@
     "js_syntax": true
    },
    "detail": "",
-   "s": 0.09
+   "s": 0.08
   },
   "deterministic-on-real-logs": {
    "pass": true,
@@ -117,7 +117,7 @@
     "differing": 0
    },
    "detail": "",
-   "s": 19.66
+   "s": 20.95
   },
   "skill-portable": {
    "pass": true,
@@ -125,10 +125,10 @@
     "py310_syntax_errors": 0,
     "isolated_doctor": true,
     "isolated_report": true,
-    "skill_md_lines": 69
+    "skill_md_lines": 70
    },
    "detail": "",
-   "s": 3.08
+   "s": 3.25
   }
  },
  "summary": {

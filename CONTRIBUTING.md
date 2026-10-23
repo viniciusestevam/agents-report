@@ -74,6 +74,13 @@ hook once:
 git config core.hooksPath .githooks
 ```
 
+## Releases
+
+Versions follow [Semantic Versioning](https://semver.org): a breaking change to the commands, their
+`--json` output or the skill's behavior bumps the major version, a new feature the minor, a fix the
+patch. To release, set the version in `agentobs/__init__.py`, `SKILL.md` and `plugin.json` (a test checks
+they agree), add the entry to `CHANGELOG.md`, commit as `chore(release): X.Y.Z`, and tag `vX.Y.Z`.
+
 ## Adding an agent
 
 Write one adapter module in `.agents/skills/agents-report/scripts/agentobs/adapters/`. The contract is in

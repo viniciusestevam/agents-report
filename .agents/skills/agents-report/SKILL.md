@@ -4,7 +4,7 @@ description: Analyze local AI coding agent sessions (Claude Code, Codex, Hermes,
 license: MIT (see LICENSE.txt)
 compatibility: Python 3.10+ standard library only (3.14+ or the zstd CLI to read Codex logs). Reads ~/.claude, ~/.codex, ~/.hermes, ~/.pi and ~/.local/share/opencode on the local machine; makes no network calls.
 metadata:
-  version: "0.1.0"
+  version: "1.0.0"
 ---
 
 # Agents Report
