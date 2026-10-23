@@ -1,0 +1,18 @@
+name: Feature request
+description: A view, metric, recommendation or agent you'd like supported
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to find out about your agents?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How you imagine it
+  - type: input
+    id: agent
+    attributes:
+      label: Agent(s) this is about

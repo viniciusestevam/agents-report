@@ -1,0 +1,22 @@
+name: Bug report
+description: Something is wrong or crashes
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran or clicked, what you expected, and what you saw. Don't paste transcript content.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `doctor`
+      description: "`python3 skills/agents-report/scripts/agents_report.py doctor` (it shows paths and counts, no transcript content)"
+      render: text
+  - type: input
+    id: env
+    attributes:
+      label: Agent, OS and Python version
+      placeholder: "Claude Code 2.1.309, macOS 26, Python 3.13"
