@@ -26,6 +26,10 @@ answers with the numbers, ranked by cost, with the change to make.
 It reads the logs of Claude Code, Codex, Hermes, Pi and OpenCode, so one report covers every agent you
 use. Nothing leaves your machine.
 
+> [!TIP]
+> **Run `/agents-report` in Claude Code to open the dashboard.** It's the main way in: overview, sessions,
+> traces, context window and recommendations, in your browser, with a short summary in the chat.
+
 <table>
 <tr>
 <td width="38%" valign="middle">
@@ -106,8 +110,19 @@ values), an estimated saving, and the concrete fix.
 /plugin install agents-report --marketplace viniciusestevam/agents-report
 ```
 
-That's it: the plugin adds the skill, and Claude uses it when you ask about cost, tokens, context or a
-past session. The command needs Claude Code 2.1.275 or later; on older versions run
+Then open the dashboard:
+
+> [!IMPORTANT]
+> ```
+> /agents-report
+> ```
+> Opens the dashboard in your browser and summarizes your last 30 days in the chat. If another command
+> already uses that name, use the full form `/agents-report:agents-report`.
+
+Claude also uses the skill on its own when you ask about cost, tokens, context or a past session
+([examples](#ask-claude)).
+
+The one-line install needs Claude Code 2.1.275 or later; on older versions run
 `/plugin marketplace add viniciusestevam/agents-report`, then `/plugin install agents-report@agents-report`.
 Update with `/plugin marketplace update agents-report`.
 
@@ -131,14 +146,14 @@ it must match `name` in `SKILL.md`.
 
 ## Ask Claude
 
-Ask in plain language, in any session:
+Start with `/agents-report`, or ask in plain language in any session:
 
 | You ask | Claude runs | You get |
 | --- | --- | --- |
+| `/agents-report` | `dashboard`, then `brief --days 30` | The dashboard open on the overview, and a short summary of the last 30 days |
 | "What did my agents cost this month?", "How do I spend less?" | `brief --days 30` | Total spend, cache hit rate and the top 3 recommendations, with the dashboard open on them |
 | "Why was my last session so expensive?" | `explain latest` | Findings ranked by cost with request numbers, and what filled the context at the costliest call |
 | "What's filling my context?" | `context latest` | The context window split by system prompt, tools, MCP, skills, hooks and messages |
-| "Open the agents dashboard" | `dashboard` | The overview, sessions, traces and recommendations in your browser |
 
 ```text
 > why was my last session so expensive?
