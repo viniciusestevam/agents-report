@@ -34,11 +34,40 @@ python3 .agents/skills/agents-report/scripts/agents_report.py serve --port 48799
 
 ## Pull requests
 
-1. Add or update a test for the behavior you change (fixtures live in `tests/fixtures.py`).
-2. Run the tests and the evals; both must pass.
-3. If you change the UI, check it in light and dark mode and at phone width, and refresh the README
+1. Use [semantic commit messages](#commit-messages), one logical change per commit.
+2. Add or update a test for the behavior you change (fixtures live in `tests/fixtures.py`).
+3. Run the tests and the evals; both must pass.
+4. If you change the UI, check it in light and dark mode and at phone width, and refresh the README
    screenshots if they no longer match (`tools/README.md`).
-4. Keep `.agents/skills/agents-report/SKILL.md` short: it is loaded into the agent's context.
+5. Keep `.agents/skills/agents-report/SKILL.md` short: it is loaded into the agent's context.
+
+## Commit messages
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org): `<type>(<scope>): <summary>`,
+in the imperative, at most 72 characters, with the why in the body when it isn't obvious.
+
+| Type | For |
+| --- | --- |
+| `feat` | a new capability (command, view, metric, adapter, rule) |
+| `fix` | a bug fix |
+| `docs` | README, guides, references |
+| `style` | visual or formatting changes with no behavior change |
+| `refactor` | restructuring with no behavior change |
+| `perf` | faster or lighter, same behavior |
+| `test` | tests and evals only |
+| `build`, `ci`, `chore` | packaging, workflows, tooling and upkeep |
+
+Scopes are optional; the usual ones are `cli`, `ui`, `adapters`, `pricing`, `context`, `plugin`, `package`,
+`tools`, `evals` and `github`. Mark a breaking change with `!` (`feat(cli)!: …`) and explain it in the body.
+
+Examples: `feat(adapters): read Gemini CLI sessions`, `fix(ui): keep trace idle-gap marks off tick labels`.
+
+CI checks every commit with `tools/check_commits.py`. Run the same check when you commit by enabling the
+hook once:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Adding an agent
 

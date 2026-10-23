@@ -13,3 +13,5 @@ file; the skill's own instructions are in `.agents/skills/agents-report/SKILL.md
 - CLI output must stay deterministic (see the determinism test and eval).
 - Never commit transcripts or screenshots of real sessions; use `tools/make_demo_data.py`.
 - Never commit the zip that `agents_report.py package` writes.
+- Commit messages follow Conventional Commits (`feat(cli): …`, `fix(ui): …`, `docs: …`), one logical change
+  per commit; `python3 tools/check_commits.py` enforces it (see CONTRIBUTING.md#commit-messages).
