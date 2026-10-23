@@ -13,19 +13,18 @@
 </p>
 
 <p align="center">
-  <a href="#install">Install</a> · <a href="#ask-your-agent">Ask your agent</a> · <a href="#commands">Commands</a> · <a href="#how-the-numbers-work">How the numbers work</a> · <a href="#privacy">Privacy</a>
+  <a href="#install-in-claude-code">Install in Claude Code</a> · <a href="#ask-claude">Ask Claude</a> · <a href="#other-agents">Other agents</a> · <a href="#bonus-the-cli-underneath">The CLI underneath</a> · <a href="#privacy">Privacy</a>
 </p>
 
 # Agents Report
 
-Agents Report is a local observability tool for AI coding agents. It reads the session logs that
-Claude Code, Codex, Hermes, Pi and OpenCode already keep on your machine and shows where the tokens,
-money and time went: what each session cost, what filled the context window, when the prompt cache was
-rebuilt, which calls were slow, and what to change.
+Agents Report is a **Claude Code skill** that tells you where your agents' tokens, money and time
+went. Ask Claude *"why was that session so expensive?"* or *"what's filling my context?"*: it reads the
+session logs already on your machine, opens the matching view of a local dashboard in your browser, and
+answers with the numbers, ranked by cost, with the change to make.
 
-**It plugs into your agent** as a Claude Code plugin or an Agent Skill. Ask *"why was that session so
-expensive?"* and the agent runs one command, opens the right view in your browser, and answers with the
-numbers. The same commands work from the terminal.
+It reads the logs of Claude Code, Codex, Hermes, Pi and OpenCode, so one report covers every agent you
+use. Nothing leaves your machine.
 
 <table>
 <tr>
@@ -101,103 +100,89 @@ values), an estimated saving, and the concrete fix.
 
 ---
 
-## Install
-
-Pick the way you'll use it. All of them need Python 3.10 or later and nothing else (reading Codex's
-compressed logs also needs Python 3.14+ or the `zstd` command).
-
-| You want | Install |
-| --- | --- |
-| The `agents-report` command in your terminal | `uv tool install git+https://github.com/viniciusestevam/agents-report` |
-| To ask Claude Code about your usage | `/plugin install agents-report --marketplace viniciusestevam/agents-report` |
-| To ask Codex or another agent | Link the skill into `~/.agents/skills/` ([below](#agent-skill)) |
-
-### Command-line tool
-
-With [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io), which put the command on your
-`PATH` in an isolated environment:
-
-```bash
-uv tool install git+https://github.com/viniciusestevam/agents-report
-# or
-pipx install git+https://github.com/viniciusestevam/agents-report
-```
-
-Then:
-
-```bash
-agents-report doctor       # which agents' logs were found
-agents-report brief        # spend, cache hit rate and the top recommendations
-agents-report dashboard    # open the web UI at http://127.0.0.1:48765
-```
-
-Try it once without installing: `uvx --from git+https://github.com/viniciusestevam/agents-report agents-report brief`.
-Upgrade with `uv tool upgrade agents-report` (or `pipx upgrade agents-report`); remove with
-`uv tool uninstall agents-report`.
-
-### Claude Code plugin
-
-In Claude Code 2.1.275 or later:
+## Install in Claude Code
 
 ```
 /plugin install agents-report --marketplace viniciusestevam/agents-report
 ```
 
-On older versions, add the marketplace first:
+That's it: the plugin adds the skill, and Claude uses it when you ask about cost, tokens, context or a
+past session. The command needs Claude Code 2.1.275 or later; on older versions run
+`/plugin marketplace add viniciusestevam/agents-report`, then `/plugin install agents-report@agents-report`.
+Update with `/plugin marketplace update agents-report`.
 
+The skill runs with the `python3` on your `PATH`, which must be 3.10 or later (`python3 --version`; the one
+macOS ships is 3.9, so install a newer one with Homebrew or uv). Nothing else is needed.
+
+<details>
+<summary>Prefer a plain skill without the plugin?</summary>
+
+Clone the repository and link the skill folder into `~/.claude/skills/`, so `git pull` keeps it current:
+
+```bash
+git clone https://github.com/viniciusestevam/agents-report ~/src/agents-report
+ln -s ~/src/agents-report/.agents/skills/agents-report ~/.claude/skills/agents-report
 ```
-/plugin marketplace add viniciusestevam/agents-report
-/plugin install agents-report@agents-report
+
+Use `<project>/.claude/skills/` to install it for one project only. Keep the folder name `agents-report`:
+it must match `name` in `SKILL.md`.
+
+</details>
+
+## Ask Claude
+
+Ask in plain language, in any session:
+
+| You ask | Claude runs | You get |
+| --- | --- | --- |
+| "What did my agents cost this month?", "How do I spend less?" | `brief --days 30` | Total spend, cache hit rate and the top 3 recommendations, with the dashboard open on them |
+| "Why was my last session so expensive?" | `explain latest` | Findings ranked by cost with request numbers, and what filled the context at the costliest call |
+| "What's filling my context?" | `context latest` | The context window split by system prompt, tools, MCP, skills, hooks and messages |
+| "Open the agents dashboard" | `dashboard` | The overview, sessions, traces and recommendations in your browser |
+
+```text
+> why was my last session so expensive?
+
+● Redesign the checkout flow cost $12.71, and 96% of that was its 4 subagents ($12.18).
+  The main thread was only $0.54; its costliest request (#0) was $0.14 for 47k prompt tokens.
+  Trace: http://127.0.0.1:48765/#/session/claude-code%3A4cde7517-…
 ```
 
-Then ask Claude about your usage ([examples](#ask-your-agent)). Update with
-`/plugin marketplace update agents-report`.
+Claude relays what the skill prints instead of doing its own arithmetic, and the skill's output is
+deterministic: the same logs always give the same answer.
 
-### Agent Skill
+## Other agents
 
-For Codex and any agent that reads [agentskills.io](https://agentskills.io) skills. The skill is the
-[`.agents/skills/agents-report/`](.agents/skills/agents-report) folder; link it into your agent's skills
-folder so `git pull` keeps it current:
+The skill follows the [agentskills.io](https://agentskills.io) format, so Codex and other agents that
+read skills can use it too. Link the [`.agents/skills/agents-report/`](.agents/skills/agents-report)
+folder into their skills directory:
 
 ```bash
 git clone https://github.com/viniciusestevam/agents-report ~/src/agents-report
 ln -s ~/src/agents-report/.agents/skills/agents-report ~/.agents/skills/agents-report
 ```
 
-For Claude Code without the plugin, link it into `~/.claude/skills/` instead. Use `<project>/.agents/skills/`
-to install it for one project only, and keep the folder name `agents-report` (it must match `name` in
-`SKILL.md`). To copy it somewhere without git, build a zip from the clone:
+To copy it somewhere without git, build a zip from the clone with
 `python3 .agents/skills/agents-report/scripts/agents_report.py package`.
 
-## Ask your agent
+## Bonus: the CLI underneath
 
-With the plugin or skill installed, ask in plain language:
+Everything the skill does comes from one command-line tool bundled inside it,
+[`agents_report.py`](.agents/skills/agents-report/scripts/agents_report.py): it parses the logs, ranks
+the findings, writes the answers and serves the dashboard. The skill's instructions only tell Claude which
+command answers which question. You never need to touch it, but you can run it yourself, for scripts,
+CI, or when you'd rather not ask an agent.
 
-| You ask | It runs |
-| --- | --- |
-| "What did my agents cost this month?", "How do I spend less?" | `brief --days 30` |
-| "Why was this session so expensive?" | `explain latest` |
-| "What's filling my context?" | `context latest` |
-| "Open the agents dashboard" | `dashboard` |
+To have it on your `PATH` as `agents-report`, install it with [uv](https://docs.astral.sh/uv/) or
+[pipx](https://pipx.pypa.io):
 
-Each command gathers the data, opens the matching dashboard view, and prints a finished answer that
-the agent relays. The output is deterministic: the same logs always give the same text.
-
-```console
-$ agents-report explain latest
-Redesign the checkout flow [4cde7517]
-claude-code · shop-web · 2026-10-19 13:54 → 2026-10-19 14:19 · claude-opus-5-5 ×10
-Cost: $0.54 estimated, $12.71 with its 4 subagents, $18.23 measured by the agent's own meter.
-
-Findings, largest cost first:
-1. 4 subagents cost $12.18, 96% of the session's total (estimated).
-2. Costliest request: #0 (claude-opus-5-5), $0.14: 47,054 prompt tokens (30,987 read from cache, 16,065 written, 2 uncached) and 306 output.
-...
+```bash
+uv tool install git+https://github.com/viniciusestevam/agents-report    # or: pipx install git+…
+agents-report brief
 ```
 
-## Commands
-
-`agents-report <command>`. Every command accepts `--json`; `agents-report --help` lists them all.
+Or try it once without installing:
+`uvx --from git+https://github.com/viniciusestevam/agents-report agents-report brief`.
 
 | Command | What it does |
 | --- | --- |
@@ -213,12 +198,11 @@ Findings, largest cost first:
 | `stop` / `serve` | Stop the background dashboard now / run it in the foreground |
 | `package [--out file.zip]` | Zip the skill for installing in another agent (from a clone of the repository) |
 
-Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`, `--project NAME`, `--here` (sessions
-started in the current directory). Name a session by its id prefix (`4cde7517`) or `latest`.
-`--now 2026-10-01` (or `AGENTS_REPORT_NOW`) pins the clock for a reproducible report "as of" a date.
-
-The dashboard server starts in the background, is reused across calls, and stops by itself about
-20 seconds after you close its last tab.
+Every command accepts `--json`. Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`,
+`--project NAME`, `--here` (sessions started in the current directory). Name a session by its id prefix
+(`4cde7517`) or `latest`. `--now 2026-10-01` (or `AGENTS_REPORT_NOW`) pins the clock for a reproducible
+report "as of" a date. The dashboard server starts in the background, is reused across calls, and stops
+by itself about 20 seconds after you close its last tab.
 
 ## Supported agents
 
