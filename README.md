@@ -103,55 +103,71 @@ values), an estimated saving, and the concrete fix.
 
 ## Install
 
-Requirements: Python 3.10 or later. Reading Codex's compressed logs also needs Python 3.14+ or the
-`zstd` command-line tool.
+Pick the way you'll use it. All of them need Python 3.10 or later and nothing else (reading Codex's
+compressed logs also needs Python 3.14+ or the `zstd` command).
 
-### Claude Code plugin (recommended)
+| You want | Install |
+| --- | --- |
+| The `agents-report` command in your terminal | `uv tool install git+https://github.com/viniciusestevam/agents-report` |
+| To ask Claude Code about your usage | `/plugin install agents-report --marketplace viniciusestevam/agents-report` |
+| To ask Codex or another agent | Link the skill into `~/.agents/skills/` ([below](#agent-skill)) |
+
+### Command-line tool
+
+With [uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io), which put the command on your
+`PATH` in an isolated environment:
+
+```bash
+uv tool install git+https://github.com/viniciusestevam/agents-report
+# or
+pipx install git+https://github.com/viniciusestevam/agents-report
+```
+
+Then:
+
+```bash
+agents-report doctor       # which agents' logs were found
+agents-report brief        # spend, cache hit rate and the top recommendations
+agents-report dashboard    # open the web UI at http://127.0.0.1:48765
+```
+
+Try it once without installing: `uvx --from git+https://github.com/viniciusestevam/agents-report agents-report brief`.
+Upgrade with `uv tool upgrade agents-report` (or `pipx upgrade agents-report`); remove with
+`uv tool uninstall agents-report`.
+
+### Claude Code plugin
+
+In Claude Code 2.1.275 or later:
 
 ```
 /plugin install agents-report --marketplace viniciusestevam/agents-report
 ```
 
-That works on Claude Code 2.1.275 or later. On older versions, add the marketplace first:
+On older versions, add the marketplace first:
 
 ```
 /plugin marketplace add viniciusestevam/agents-report
 /plugin install agents-report@agents-report
 ```
 
-Update later with `/plugin marketplace update agents-report`.
+Then ask Claude about your usage ([examples](#ask-your-agent)). Update with
+`/plugin marketplace update agents-report`.
 
-### Agent Skill (Codex, Claude Code and other agentskills.io agents)
+### Agent Skill
 
-The skill lives in [`.agents/skills/agents-report/`](.agents/skills/agents-report). Clone the repository and link
-the skill into your agent's skills folder, so `git pull` keeps it up to date:
+For Codex and any agent that reads [agentskills.io](https://agentskills.io) skills. The skill is the
+[`.agents/skills/agents-report/`](.agents/skills/agents-report) folder; link it into your agent's skills
+folder so `git pull` keeps it current:
 
 ```bash
 git clone https://github.com/viniciusestevam/agents-report ~/src/agents-report
-
-ln -s ~/src/agents-report/.agents/skills/agents-report ~/.agents/skills/agents-report   # Codex and other agents
-ln -s ~/src/agents-report/.agents/skills/agents-report ~/.claude/skills/agents-report   # Claude Code
+ln -s ~/src/agents-report/.agents/skills/agents-report ~/.agents/skills/agents-report
 ```
 
-Use `<project>/.agents/skills/` or `<project>/.claude/skills/` to install it for one project. Keep the
-folder name `agents-report`: it must match `name` in `SKILL.md`.
-
-Or build a single zip and unzip it where you need it:
-
-```bash
-python3 .agents/skills/agents-report/scripts/agents_report.py package     # writes agents-report.zip
-unzip agents-report.zip -d ~/.agents/skills/
-```
-
-### Standalone CLI
-
-Nothing to install. From the cloned repository:
-
-```bash
-alias agents-report="python3 $PWD/.agents/skills/agents-report/scripts/agents_report.py"
-agents-report doctor        # which agents' logs were found
-agents-report dashboard     # open the web UI at http://127.0.0.1:48765
-```
+For Claude Code without the plugin, link it into `~/.claude/skills/` instead. Use `<project>/.agents/skills/`
+to install it for one project only, and keep the folder name `agents-report` (it must match `name` in
+`SKILL.md`). To copy it somewhere without git, build a zip from the clone:
+`python3 .agents/skills/agents-report/scripts/agents_report.py package`.
 
 ## Ask your agent
 
@@ -181,8 +197,7 @@ Findings, largest cost first:
 
 ## Commands
 
-`agents-report <command>` (or `python3 .agents/skills/agents-report/scripts/agents_report.py <command>`).
-Every command accepts `--json`.
+`agents-report <command>`. Every command accepts `--json`; `agents-report --help` lists them all.
 
 | Command | What it does |
 | --- | --- |
@@ -196,7 +211,7 @@ Every command accepts `--json`.
 | `recommend` | All recommendations |
 | `doctor` | Which agents were found, parse errors, zstd support |
 | `stop` / `serve` | Stop the background dashboard now / run it in the foreground |
-| `package [--out file.zip]` | Zip the skill for installing in another agent |
+| `package [--out file.zip]` | Zip the skill for installing in another agent (from a clone of the repository) |
 
 Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`, `--project NAME`, `--here` (sessions
 started in the current directory). Name a session by its id prefix (`4cde7517`) or `latest`.
@@ -250,6 +265,7 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
   SKILL.md                        instructions agents load
   .claude-plugin/plugin.json      plugin manifest
   scripts/                        CLI (agents_report.py) and the agentobs package
+pyproject.toml                    the agents-report command package (code and UI from the skill folder)
   assets/ui/                      the dashboard: plain HTML, CSS and JS, no build step
   references/                     metrics, recommendation rules, adapter contract
 tests/                            unit and integration tests on synthetic fixtures

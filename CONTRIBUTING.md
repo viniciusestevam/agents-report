@@ -22,8 +22,13 @@ claude plugin validate .                  # plugin and marketplace manifests (ne
 ```
 
 Run the dashboard against your own logs with
-`python3 .agents/skills/agents-report/scripts/agents_report.py dashboard`. A running server restarts itself
+`python3 .agents/skills/agents-report/scripts/agents_report.py dashboard` (or install your working copy
+as the `agents-report` command with `uv tool install --editable .`). A running server restarts itself
 when the code changes.
+
+The skill folder is the single source: `pyproject.toml` builds the `agents-report` package from its
+`scripts/agentobs/` code and bundles `assets/ui/` into it. The version lives in `agentobs/__init__.py`,
+and a test checks that `SKILL.md` and `plugin.json` say the same.
 
 To work without your own logs, generate synthetic ones:
 
