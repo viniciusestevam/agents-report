@@ -26,12 +26,13 @@ commands together or redo its arithmetic.
 
 | The user asks | Run | Then |
 | --- | --- | --- |
-| Nothing specific, "show me my usage", "what does it cost", "how do I spend less" | `brief --days 30` (or the period they name; omit `--days` for all time) | Relay the output as is. Offer the fix for a recommendation from [references/recommendations.md](references/recommendations.md) if they want it. |
+| Nothing specific (`/agents-report` alone), "open the dashboard", "show me my usage" | `dashboard`, then `brief --days 30 --no-dashboard` | Lead with the dashboard URL (the main view), then relay the brief as is. |
+| "What does it cost", "how do I spend less" (or a period: "this week") | `brief --days 30` (or the period they name; omit `--days` for all time) | Relay the output as is. Offer the fix for a recommendation from [references/recommendations.md](references/recommendations.md) if they want it. |
 | "Why was this session expensive / slow?" | `explain <session>` (`latest` = most recent here; find others with `sessions --here`) | Relay the output: findings are already ranked by cost and cite request numbers. |
 | "What is in my context?" | `context latest`, and `dashboard --session latest --req <N>` with N from its first line | Name the three largest groups exactly as printed. |
 | A specific session's numbers | `show <session>` | Quote the lines asked about. |
 | A full written report | `report --days 30 --out report.md` | Give the path. |
-| "Open the dashboard" | `dashboard` (`--view sessions\|recommendations\|sources`, `--session <id>`, `--req N`) | Give the URL it prints. |
+| A specific dashboard view | `dashboard` (`--view sessions\|recommendations\|sources`, `--session <id>`, `--req N`) | Give the URL it prints. |
 
 The output is deterministic: the same logs give the same text. `--now 2026-10-01` (or `AGENTS_REPORT_NOW`)
 pins the clock for a report "as of" a date. Every command accepts `--json`; the answer commands put the
