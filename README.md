@@ -1,155 +1,174 @@
 <p align="center">
-  <img src="assets/brand/banner.png" alt="Agents Report: see what your AI coding agents cost, and why." width="860">
+  <img src=".github/assets/banner.png" alt="Agents Report" width="760" />
 </p>
 
 <p align="center">
-  <a href="LICENSE.txt"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-b8572f"></a>
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3d3a35">
-  <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-none-3d3a35">
-  <img alt="Local only" src="https://img.shields.io/badge/data-stays%20local-3d3a35">
+  <strong>See what your AI coding agents cost, and why.</strong><br/>
+  <strong>Spend • Session traces • Context window • Recommendations</strong><br/>
+  <sub>Reads the logs your agents already write. Local only, no dependencies, nothing leaves your machine.</sub>
 </p>
 
-**Agents Report** reads the session logs your coding agents already write on your machine and shows
-where the tokens, money and time went: what each session cost, what filled the context window, when
-the prompt cache was rebuilt, which tool calls were slow, and what to change. It ships as a CLI, a local web
-dashboard, and an Agent Skill and Claude Code plugin, so you can also just ask your agent *"why was
-that session so expensive?"*
+<p align="center">
+  <sub>Claude Code · Codex · Hermes · Pi · OpenCode</sub>
+</p>
 
-It works with **Claude Code, Codex, Hermes, Pi and OpenCode**. It uses only the Python standard library,
-makes no network calls, and nothing leaves your machine.
+<p align="center">
+  <a href="#install">Install</a> · <a href="#ask-your-agent">Ask your agent</a> · <a href="#commands">Commands</a> · <a href="#how-the-numbers-work">How the numbers work</a> · <a href="#privacy">Privacy</a>
+</p>
 
-## Contents
+# Agents Report
 
-- [What you get](#what-you-get)
-- [Install](#install): [Claude Code plugin](#as-a-claude-code-plugin-recommended) · [Agent Skill](#as-an-agent-skill-claude-code-codex-and-other-agents) · [CLI only](#as-a-standalone-cli)
-- [Use it](#use-it)
-- [CLI reference](#cli-reference)
-- [Supported agents](#supported-agents)
-- [How the numbers work](#how-the-numbers-work)
-- [Privacy](#privacy)
-- [Development](#development)
+Agents Report is a local observability tool for AI coding agents. It reads the session logs that
+Claude Code, Codex, Hermes, Pi and OpenCode already keep on your machine and shows where the tokens,
+money and time went: what each session cost, what filled the context window, when the prompt cache was
+rebuilt, which calls were slow, and what to change.
 
-## What you get
+**It plugs into your agent** as a Claude Code plugin or an Agent Skill. Ask *"why was that session so
+expensive?"* and the agent runs one command, opens the right view in your browser, and answers with the
+numbers. The same commands work from the terminal.
 
-- **Answers in one command.** `brief` summarizes spend, cache efficiency and the top recommendations.
-  `explain <session>` tells you why one session cost what it did, with findings ranked by cost and tied to
-  request numbers. The output is deterministic: the same logs always give the same text.
-- **A local dashboard** at `http://127.0.0.1:48765`:
-  - *Overview*: spend per day by agent, a GitHub-style activity graph, cache hit rate, top sessions.
-  - *Sessions*: a timeline with a lane per project, sortable by recent activity or cost, with a
-    spend-per-day strip you drag to pan and zoom. The list below it can be grouped by project.
-  - *Session trace*: every prompt, model call, tool call and subagent as a span tree on one clock, with
-    duration and cost per span, SLOWEST / PRICIEST / ERROR badges, zoom, a details panel, and live
-    refresh while the session is still running.
-  - *Context inspector*: rebuilds the exact API request Claude Code sent (system prompt, tool
-    definitions, MCP tools, loaded skills, hook output, messages) and splits the measured token total
-    across them. It works on any past request, not just the current one.
-  - *Recommendations*: deterministic rules, each with evidence (session, request, measured values), an
-    estimated saving, and the concrete change to make.
-- **Honest numbers.** Every value is labelled *measured* (read from the logs), *estimated* (computed),
-  or *unavailable*. Unknown prices show as a dash, never as $0.
+<table>
+<tr>
+<td width="38%" valign="middle">
+
+### Trace every session
+
+Every prompt, model call, tool call and subagent as a span tree on one clock, with duration and cost
+per span. SLOWEST, PRICIEST and ERROR badges point at what to look at. Expand subagents inline, drag
+to zoom, click a span for its tokens, cache hits and full input and output. Live while the session runs.
+
+</td>
+<td width="62%">
+
+<img src=".github/assets/screenshots/trace.png" alt="Session trace: span tree of model calls, tool calls and a subagent, with a details panel" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="38%" valign="middle">
+
+### See every session, by project
+
+A timeline with a lane per project, sorted by recent activity or cost, and a spend-per-day strip you
+drag to pan and zoom. Below it, every session across agents, flat or grouped by project, with subagent
+cost rolled into its parent.
+
+</td>
+<td width="62%">
+
+<img src=".github/assets/screenshots/sessions.png" alt="Sessions timeline with a lane per project and the session list grouped by project" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="38%" valign="middle">
+
+### Look inside the context window
+
+For any past request, rebuild what the model actually read: system prompt, tool definitions, MCP
+tools, loaded skills, hook output, tool results and messages, each with its share of the measured
+token total. Search the full text of every item.
+
+</td>
+<td width="62%">
+
+<img src=".github/assets/screenshots/context.png" alt="Context window as a grid of squares by category, with the item list below" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="38%" valign="middle">
+
+### Know what to change
+
+Deterministic rules flag cache rebuilds after breaks, oversized tool results, hooks that inject large
+text, expensive subagent models and more. Each one comes with evidence (session, request, measured
+values), an estimated saving, and the concrete fix.
+
+</td>
+<td width="62%">
+
+<img src=".github/assets/screenshots/recommendations.png" alt="Recommendations with evidence and estimated savings" width="100%" />
+
+</td>
+</tr>
+</table>
+
+<p align="center">
+  <img src=".github/assets/screenshots/overview.png" alt="Overview: spend, cache hit rate, activity graph and spend per day" width="860" />
+  <br/><sub>Overview: spend, cache efficiency, activity and spend per day across all agents. Screenshots use synthetic demo data.</sub>
+</p>
+
+---
 
 ## Install
 
-Requirements: Python 3.10 or later. To read Codex's compressed logs you also need Python 3.14+ or the
+Requirements: Python 3.10 or later. Reading Codex's compressed logs also needs Python 3.14+ or the
 `zstd` command-line tool.
 
-### As a Claude Code plugin (recommended)
-
-In Claude Code (2.1.275 or later), run:
+### Claude Code plugin (recommended)
 
 ```
 /plugin install agents-report --marketplace viniciusestevam/agents-report
 ```
 
-On older versions, add the marketplace first, then install:
+That works on Claude Code 2.1.275 or later. On older versions, add the marketplace first:
 
 ```
 /plugin marketplace add viniciusestevam/agents-report
 /plugin install agents-report@agents-report
 ```
 
-From your shell, the same thing is:
+Update later with `/plugin marketplace update agents-report`.
+
+### Agent Skill (Codex, Claude Code and other agentskills.io agents)
+
+The skill lives in [`skills/agents-report/`](skills/agents-report). Clone the repository and link
+the skill into your agent's skills folder, so `git pull` keeps it up to date:
 
 ```bash
-claude plugin marketplace add viniciusestevam/agents-report
-claude plugin install agents-report@agents-report
+git clone https://github.com/viniciusestevam/agents-report ~/src/agents-report
+
+ln -s ~/src/agents-report/skills/agents-report ~/.agents/skills/agents-report   # Codex and other agents
+ln -s ~/src/agents-report/skills/agents-report ~/.claude/skills/agents-report   # Claude Code
 ```
 
-Then ask Claude about your usage (see [Use it](#use-it)). To update later, run
-`/plugin marketplace update agents-report`.
+Use `<project>/.agents/skills/` or `<project>/.claude/skills/` to install it for one project. Keep the
+folder name `agents-report`: it must match `name` in `SKILL.md`.
 
-### As an Agent Skill (Claude Code, Codex and other agents)
-
-This repository is itself the skill folder (`SKILL.md` at the root, in the [agentskills.io](https://agentskills.io)
-format), so you can clone it straight into your agent's skills directory:
+Or build a single zip and unzip it where you need it:
 
 ```bash
-# Claude Code: all projects
-git clone https://github.com/viniciusestevam/agents-report ~/.claude/skills/agents-report
-
-# Codex and other agentskills.io agents: all projects
-git clone https://github.com/viniciusestevam/agents-report ~/.agents/skills/agents-report
+python3 skills/agents-report/scripts/agents_report.py package     # writes agents-report.zip
+unzip agents-report.zip -d ~/.agents/skills/
 ```
 
-Use `<project>/.claude/skills/` or `<project>/.agents/skills/` instead to install it for one project.
-Keep the folder name `agents-report`: it must match `name` in `SKILL.md`. Update with `git pull`.
+### Standalone CLI
 
-Prefer a single file? Build a zip (no git metadata, caches or eval history) and unzip it where you need it:
+Nothing to install. From the cloned repository:
 
 ```bash
-python3 scripts/agents_report.py package          # writes agents-report.zip
-unzip agents-report.zip -d ~/.claude/skills/
+alias agents-report="python3 $PWD/skills/agents-report/scripts/agents_report.py"
+agents-report doctor        # which agents' logs were found
+agents-report dashboard     # open the web UI at http://127.0.0.1:48765
 ```
 
-### As a standalone CLI
+## Ask your agent
 
-No install step: clone and run.
-
-```bash
-git clone https://github.com/viniciusestevam/agents-report
-cd agents-report
-python3 scripts/agents_report.py doctor           # which agents' logs were found
-python3 scripts/agents_report.py dashboard        # open the web UI
-```
-
-Optionally put it on your `PATH`:
-
-```bash
-alias agents-report="python3 $PWD/scripts/agents_report.py"
-```
-
-## Use it
-
-### Ask your agent
-
-With the plugin or skill installed, ask in plain language. The agent runs one command, opens the right
-dashboard view, and relays the answer:
+With the plugin or skill installed, ask in plain language:
 
 | You ask | It runs |
 | --- | --- |
-| "What did my agents cost this month?", "How can I spend less?" | `brief --days 30` |
+| "What did my agents cost this month?", "How do I spend less?" | `brief --days 30` |
 | "Why was this session so expensive?" | `explain latest` |
 | "What's filling my context?" | `context latest` |
 | "Open the agents dashboard" | `dashboard` |
 
-### From the terminal
+Each command gathers the data, opens the matching dashboard view, and prints a finished answer that
+the agent relays. The output is deterministic: the same logs always give the same text.
 
 ```console
-$ python3 scripts/agents_report.py brief --days 30
-Agent usage, last 30 days (as of 2026-10-22 20:54)
-Dashboard: http://127.0.0.1:48765/#/recommendations
-- Spend: $197.88 estimated across 32 sessions and 2,056 API requests.
-- Claude Code's own meter measured $168.52 for the 25 sessions that record it (estimate for the same sessions: $159.49).
-- Cache hit rate: 98% of prompt tokens were read from cache (measured).
-Top recommendations:
-1. [high] Resuming long contexts after breaks rebuilt the prompt cache 8× (about $11.45 avoidable, estimated)
-   Do: Before a long break, finish the task or /compact. When you return, start a fresh session with a short handoff note instead of resuming a 100k+ token context.
-...
-```
-
-```console
-$ python3 scripts/agents_report.py explain latest
+$ agents-report explain latest
 Redesign the checkout flow [4cde7517]
 claude-code · shop-web · 2026-10-19 13:54 → 2026-10-19 14:19 · claude-opus-5-5 ×10
 Cost: $0.54 estimated, $12.71 with its 4 subagents, $18.23 measured by the agent's own meter.
@@ -160,98 +179,90 @@ Findings, largest cost first:
 ...
 ```
 
-The dashboard server starts in the background, is reused across calls, and stops by itself about
-20 seconds after you close the last dashboard tab.
+## Commands
 
-## CLI reference
-
-Run `python3 scripts/agents_report.py <command>`. Every command accepts `--json`.
+`agents-report <command>` (or `python3 skills/agents-report/scripts/agents_report.py <command>`).
+Every command accepts `--json`.
 
 | Command | What it does |
 | --- | --- |
-| `brief [--days N]` | Spend, measured meter, cache hit rate, costliest session and top 3 recommendations, as finished text, plus the dashboard URL |
+| `brief [--days N]` | Spend, measured meter, cache hit rate, costliest session and the top 3 recommendations, plus the dashboard URL |
 | `explain <session>` | Why one session cost what it did: findings ranked by cost, and what filled the context at its costliest request |
-| `dashboard [--view V] [--session S] [--req N]` | Open the web UI (starts or reuses the background server). Views: `overview`, `sessions`, `recommendations`, `sources` |
-| `sessions [--limit N]` | List sessions with cost, requests, cache hit and peak context |
-| `show <session>` | One session's models, tokens, cost (estimated and measured), cache rebuilds and large tool outputs |
+| `dashboard [--view V] [--session S] [--req N]` | Open the web UI. Views: `overview`, `sessions`, `recommendations`, `sources` |
+| `sessions [--limit N]` | List sessions with cost, requests, cache hit rate and peak context |
+| `show <session>` | One session's models, tokens, cost, cache rebuilds and large tool outputs |
 | `context <session> [--req N]` | What one API request put in the context window, by contributor |
 | `report [--days N] [--out file.md]` | Full Markdown report with recommendations and evidence |
 | `recommend` | All recommendations |
 | `doctor` | Which agents were found, parse errors, zstd support |
-| `stop` / `serve` | Stop the background server now / run it in the foreground |
+| `stop` / `serve` | Stop the background dashboard now / run it in the foreground |
 | `package [--out file.zip]` | Zip the skill for installing in another agent |
 
-Filters for the cross-session commands: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`,
-`--project NAME`, `--here` (sessions started in the current directory). Name a session by its id prefix
-(`4cde7517`) or `latest`.
+Filters: `--days N`, `--agent claude-code|codex|hermes|pi|opencode`, `--project NAME`, `--here` (sessions
+started in the current directory). Name a session by its id prefix (`4cde7517`) or `latest`.
+`--now 2026-10-01` (or `AGENTS_REPORT_NOW`) pins the clock for a reproducible report "as of" a date.
 
-`--now 2026-10-01` (or `AGENTS_REPORT_NOW`) pins the clock, so a report "as of" a date is reproducible and
-leaves out later sessions.
+The dashboard server starts in the background, is reused across calls, and stops by itself about
+20 seconds after you close its last tab.
 
 ## Supported agents
 
 | Agent | Logs read | Per-request detail |
 | --- | --- | --- |
-| Claude Code | `~/.claude/projects/` (or `CLAUDE_CONFIG_DIR`), including subagents | Yes, plus the exact request when Claude Code logged it, and its own cost meter |
+| Claude Code | `~/.claude/projects/` (or `CLAUDE_CONFIG_DIR`), including subagents | Yes, plus the exact request when logged, and Claude Code's own cost meter |
 | Codex | `~/.codex/sessions/` and its thread database (`CODEX_HOME`) | Yes |
 | Hermes | `~/.hermes/state.db` (`HERMES_HOME`), read-only | Token totals per model only |
-| Pi | `~/.pi/agent/sessions/` (`PI_CODING_AGENT_DIR`) | Yes (built from the published format, tested on fixtures) |
-| OpenCode | `~/.local/share/opencode/opencode*.db` (`OPENCODE_DB`), read-only | Yes (built from the source, tested on fixtures) |
+| Pi | `~/.pi/agent/sessions/` (`PI_CODING_AGENT_DIR`) | Yes (from the published format, tested on fixtures) |
+| OpenCode | `~/.local/share/opencode/opencode*.db` (`OPENCODE_DB`), read-only | Yes (from its source, tested on fixtures) |
 
-Adding another agent means writing one adapter module; see
-[references/adapters.md](references/adapters.md).
+Adding an agent means writing one adapter module: see
+[references/adapters.md](skills/agents-report/references/adapters.md).
 
 ## How the numbers work
 
-- **Tokens and timestamps are measured**: they come straight from the agents' logs. Claude Code writes
-  several log lines per API response; each response is counted once.
-- **Cost is estimated** from tokens × list price. Claude prices are Anthropic's published rates
-  ([pricing.py](scripts/agentobs/pricing.py), dated); the evals show they reproduce Claude Code's own
-  cost meter to within 0.04%. Where Claude Code records its meter, the measured figure is shown next to
-  the estimate.
-- **No OpenAI prices are bundled**, so Codex cost (and any model without a known price) shows as
-  *unavailable* until you add `~/.config/agents-report/prices.json` (format in
-  [references/metrics.md](references/metrics.md)).
+- **Tokens and timestamps are measured**, read straight from the logs. Claude Code writes several log
+  lines per API response; each response is counted once.
+- **Cost is estimated** as tokens × list price. Claude prices are Anthropic's published rates; the evals
+  show they reproduce Claude Code's own meter to within 0.04%, and where the meter is logged it is
+  shown next to the estimate.
+- **Unknown prices stay unknown.** No OpenAI prices are bundled, so Codex cost shows as *unavailable*
+  (never $0) until you add `~/.config/agents-report/prices.json`.
 - **Savings are estimates** from logged tokens and current prices; their effect on output quality isn't measured.
 
-Metric definitions: [references/metrics.md](references/metrics.md). Every recommendation rule, its
-threshold and its fix: [references/recommendations.md](references/recommendations.md).
+Definitions: [metrics](skills/agents-report/references/metrics.md) ·
+[recommendation rules](skills/agents-report/references/recommendations.md).
 
 ## Privacy
 
-- Reads the log folders listed above; SQLite stores are opened read-only.
-- Makes no network calls. The dashboard binds to 127.0.0.1, rejects other `Host` headers (DNS
-  rebinding), serves only its own files, and sets a strict Content-Security-Policy. The UI loads no external
-  fonts, scripts or images.
-- Transcripts can contain secrets. The skill tells agents to summarize, not paste raw excerpts, and to
-  ask before changing your configuration.
+- Reads only the log folders above; SQLite stores are opened read-only.
+- Makes no network calls. The dashboard binds to 127.0.0.1, rejects other `Host` headers, serves only
+  its own files, and sets a strict Content-Security-Policy. The UI loads no external fonts, scripts or images.
+- Transcripts can contain secrets. The skill tells agents to summarize rather than paste raw excerpts,
+  and to ask before changing your configuration.
 
-## Development
+See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
-```bash
-python3 -m unittest discover -s tests   # 41 tests on synthetic fixtures with hand-computed answers
-python3 evals/run_evals.py              # 12 end-to-end checks against the real logs on this machine
-```
-
-The evals check, among other things, that every local log parses, that pricing reproduces Claude
-Code's own meter, that unknown prices are never reported as $0, and that output is byte-identical
-across runs. Method and history: [docs/EVALS.md](docs/EVALS.md). Project state, decisions and known
-limitations: [docs/STATE.md](docs/STATE.md).
+## Repository layout
 
 ```
-agents-report/
-  SKILL.md                  instructions agents load (agentskills.io format)
-  .claude-plugin/           Claude Code plugin and marketplace manifests
-  scripts/agents_report.py  CLI entry point
-  scripts/agentobs/         adapters per agent, store, analysis, context rebuild, pricing, server, CLI
-  assets/ui/                the dashboard: plain HTML, CSS and JS, no build step
-  references/               metric definitions, recommendation rules, adapter contract
-  tests/  evals/  docs/
+.claude-plugin/marketplace.json   Claude Code marketplace (lists the plugin below)
+skills/agents-report/             the plugin and skill: everything that ships
+  SKILL.md                        instructions agents load
+  .claude-plugin/plugin.json      plugin manifest
+  scripts/                        CLI (agents_report.py) and the agentobs package
+  assets/ui/                      the dashboard: plain HTML, CSS and JS, no build step
+  references/                     metrics, recommendation rules, adapter contract
+tests/                            unit and integration tests on synthetic fixtures
+evals/                            end-to-end checks against the real logs on your machine
+tools/                            synthetic demo data and the screenshot recorder
+docs/                             project state, decisions and eval history
 ```
 
-Contributions are welcome. Please run the tests and evals before opening a pull request, and keep the
-code dependency-free.
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md): keep it dependency-free,
+and run the tests and evals before opening a pull request.
 
 ## License
 
-[MIT](LICENSE.txt)
+[MIT](LICENSE)
