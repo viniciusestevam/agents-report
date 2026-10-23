@@ -934,7 +934,13 @@ function tabTrace(el, key, d) {
     let ticks = "";
     for (let v = Math.ceil(v0 / step) * step; v <= v1; v += step) ticks += `<i class="tk" style="left:${pos((v - v0) / span * 100)}"><span>${mss(v)}</span></i>`;
     const gm = [];  // idle-gap marks; ones closer than 4% of the width merge into one so the axis stays readable
-    clock.gaps.filter((g) => g.at > v0 && g.at < v1).forEach((g) => { const p = (g.at - v0) / span * 100, l = gm[gm.length - 1]; if (l && p - l.p < 4) { l.n++; l.real += g.real; } else gm.push({ p, n: 1, real: g.real }); });
+    const tickP = [];
+    for (let v = Math.ceil(v0 / step) * step; v <= v1; v += step) tickP.push((v - v0) / span * 100);
+    clock.gaps.filter((g) => g.at > v0 && g.at < v1).forEach((g) => {
+      const p = (g.at - v0) / span * 100, l = gm[gm.length - 1];
+      if (tickP.some((t) => p > t - 1.5 && p < t + 6)) return;  // would sit on a tick label: the cut still shows as a grid line
+      if (l && p - l.p < 4) { l.n++; l.real += g.real; } else gm.push({ p, n: 1, real: g.real });
+    });
     const gaps = gm.map((g) => `<i class="gp" style="left:${pos(g.p)}" data-tip="${g.n > 1 ? g.n + " idle gaps" : "Idle"} · ${esc(dur(g.real * 1000))} real time, each shown as ${GAP} s"></i>`).join("");
     const now = isLive() ? X(Date.now() / 1000) : null;
     const guides = (x) => Array.from({ length: x.depth }, (_, j) => `<i class="tr-g" style="left:calc(17px + ${j} * var(--ind))"></i>`).join("");
