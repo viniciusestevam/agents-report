@@ -1,0 +1,12 @@
+{
+  "name": "agents-report",
+  "displayName": "Agents Report",
+  "version": "0.1.0",
+  "description": "See what your AI coding agents cost, and why: spend, prompt-cache efficiency, context contents, session traces and evidence-backed recommendations for Claude Code, Codex, Hermes, Pi and OpenCode. Local only.",
+  "author": { "name": "Vinicius Estevam", "url": "https://github.com/viniciusestevam" },
+  "homepage": "https://github.com/viniciusestevam/agents-report",
+  "repository": "https://github.com/viniciusestevam/agents-report",
+  "license": "MIT",
+  "keywords": ["observability", "cost", "tokens", "prompt-cache", "context-window", "tracing", "codex", "claude-code"],
+  "icon": "./assets/brand/icon.png"
+}

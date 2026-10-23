@@ -1,0 +1,14 @@
+{
+  "name": "agents-report",
+  "description": "Agents Report: local observability for AI coding agents.",
+  "owner": { "name": "Vinicius Estevam", "url": "https://github.com/viniciusestevam" },
+  "plugins": [
+    {
+      "name": "agents-report",
+      "source": "./",
+      "description": "See what your AI coding agents cost, and why. Local only.",
+      "category": "productivity",
+      "tags": ["observability", "cost", "tokens"]
+    }
+  ]
+}
