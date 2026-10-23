@@ -370,6 +370,21 @@ class TestSkill(unittest.TestCase):
         for ref in re.findall(r"\]\(((?:references|scripts|assets)/[^)]+)\)", text):
             self.assertTrue((skill / ref).exists(), ref)
 
+    def test_versions_agree(self):
+        import re
+        from agentobs import __version__
+        skill_md = re.search(r'^  version: "([^"]+)"', (SKILL / "SKILL.md").read_text(), re.M).group(1)
+        plugin = json.loads((SKILL / ".claude-plugin" / "plugin.json").read_text())["version"]
+        self.assertEqual((skill_md, plugin), (__version__, __version__))
+
+    def test_package_build_bundles_the_ui(self):
+        """pyproject.toml must point at the real code and dashboard paths."""
+        import re
+        text = (ROOT / "pyproject.toml").read_text()
+        for path in re.findall(r'"(\.agents/skills/agents-report/[^"]+)"', text):
+            self.assertTrue((ROOT / path).exists(), path)
+        self.assertIn('agents-report = "agentobs.cli:main"', text)
+
 
 if __name__ == "__main__":
     unittest.main()

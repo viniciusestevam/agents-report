@@ -7,7 +7,7 @@ import time
 from collections import Counter
 from datetime import datetime
 
-from . import analyze, context, pricing
+from . import __version__, analyze, context, pricing
 from .store import Store, tree_cost
 from .util import now, prompt_tokens
 
@@ -390,8 +390,10 @@ def ensure_server(port=None, restart=False):
                 time.sleep(0.1)
     log = server.STATE.with_name("server.log")
     log.parent.mkdir(parents=True, exist_ok=True)
-    entry = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "agents_report.py")
-    cmd = [sys.executable, entry, "serve", "--auto-stop"] + (["--port", str(port)] if port else [])
+    # run this same copy of the code, whether it came from the skill folder or an installed package
+    pkg_parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    boot = f"import sys; sys.path.insert(0, {pkg_parent!r}); from agentobs.cli import main; sys.exit(main())"
+    cmd = [sys.executable, "-c", boot, "serve", "--auto-stop"] + (["--port", str(port)] if port else [])
     old_pid = (st or {}).get("pid")
     with open(log, "ab") as lf:
         proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=lf, stderr=lf, start_new_session=True)
@@ -455,6 +457,10 @@ def cmd_package(st, a):
     import zipfile
     from pathlib import Path
     root = Path(__file__).resolve().parents[2]
+    if not (root / "SKILL.md").is_file():
+        print("package zips the skill folder, so run it from a copy of the repository: "
+              "python3 .agents/skills/agents-report/scripts/agents_report.py package", file=sys.stderr)
+        return 2
     out = Path(a.out or f"{root.name}.zip").resolve()
     files = [f for f in sorted(root.rglob("*")) if f.is_file()
              and not any(fnmatch.fnmatch(part, pat) for part in f.relative_to(root).parts for pat in PACKAGE_EXCLUDE)]
@@ -466,6 +472,7 @@ def cmd_package(st, a):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="agents-report", description="Local observability for AI coding agents.")
+    p.add_argument("--version", action="version", version=f"agents-report {__version__}")
     p.add_argument("--now", help="pin the clock (epoch seconds or ISO date/time) so --days windows and report dates are reproducible; same as AGENTS_REPORT_NOW")
     sub = p.add_subparsers(dest="cmd", required=True)
 

@@ -12,7 +12,9 @@ from urllib.parse import parse_qs, urlparse
 from . import analyze, context, pricing, util
 from .store import Store, tree_cost
 
-UI = Path(__file__).resolve().parent.parent.parent / "assets" / "ui"
+# The dashboard files: inside the package when installed with pip/uv/pipx, next to scripts/ in the skill folder.
+UI = next((p for p in (Path(__file__).resolve().parent / "ui", Path(__file__).resolve().parent.parent.parent / "assets" / "ui")
+           if (p / "index.html").is_file()), Path(__file__).resolve().parent.parent.parent / "assets" / "ui")
 CODE = Path(__file__).resolve().parent
 DEFAULT_PORT = 48765  # dedicated, rarely used; falls back to any free port when taken
 STATE = Path(os.environ.get("AGENTOBS_STATE", Path.home() / ".cache" / "agents-report" / "server.json"))

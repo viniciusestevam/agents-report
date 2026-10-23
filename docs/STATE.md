@@ -24,6 +24,11 @@ Agent Skill (agentskills.io spec) that also serves the web UI.
 10. ✅ Visual-first: `dashboard` opens the UI on a dedicated port (48765, any free port if taken), reuses a healthy dashboard server, refuses to reuse a foreign one, restarts when code changes; the skill opens it in every workflow. Auto-stop: each tab checks in every 15 s and sends a goodbye beacon on close; the background server exits 20 s after the last tab is gone (150 s if a tab dies silently, 10 min if none ever opens), and the page shows a restart hint if the server is gone.
 
 ## Decisions
+- **Installable command (2026-10-22).** `pyproject.toml` (hatchling) builds the `agents-report` package straight from
+  the skill's `scripts/agentobs/` and bundles `assets/ui/` as `agentobs/ui`, so `uv tool install` / `pipx install`
+  give an `agents-report` command with no copy of the code in the repo. The server finds the UI in either place and
+  starts its background copy with `python -c` from the same code. `__version__` in `agentobs/__init__.py` is the
+  version; a test keeps SKILL.md and plugin.json equal to it. CI installs with uv and pipx on Linux and macOS.
 - **Deterministic answers (2026-10-22).** The scripts gather data, rank findings and write the reply; the agent picks one
   command per question (`brief`, `explain`, `context`, `show`, `report`) and relays it. Same logs → byte-identical output:
   tested across processes with different hash seeds (unit test on fixtures, eval on a frozen copy of the real logs).
